@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Planning — CvoorU</title>
+<style>
+:root{
+  --cv-blue:#0D7BBF; --cv-blue-dark:#0A5E93; --cv-blue-light:#E8F4FC;
+  --cv-green:#6DB82A; --cv-green-dark:#559020; --cv-green-light:#F0F8E8;
+  --cv-dark:#1D2231; --cv-white:#FFFFFF;
+  --cv-warning:#F59E0B; --cv-error:#E53E3E;
+  --cv-grey-100:#F7F9FB; --cv-grey-200:#E2E8F0; --cv-grey-400:#A0AEC0; --cv-grey-700:#4A5568;
+  --cv-font:'Segoe UI',Arial,sans-serif;
+  --cv-radius-sm:4px; --cv-radius-md:8px;
+  --cv-shadow-sm:0 1px 3px rgba(13,123,191,.12);
+  --cv-shadow-md:0 4px 12px rgba(13,123,191,.15);
+  /* statuskleuren planning */
+  --voltooid:var(--cv-green); --uitvoering:var(--cv-blue);
+  --gepland:#A0AEC0; --geblokkeerd:var(--cv-error);
+  --oranje:var(--cv-warning); --oranje-licht:#FEF3C7;
+  --tekst:var(--cv-dark); --tekst-licht:var(--cv-grey-700);
+  --raster:var(--cv-grey-200); --band:var(--cv-grey-100); --wit:var(--cv-white);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--cv-font);color:var(--cv-dark);background:var(--cv-grey-100);font-size:15px}
+button{font:inherit;cursor:pointer}
+
+/* ---------- topbar (timetrack-stijl) ---------- */
+:root{--tb-navy:#1D3886; --tb-navy-donker:#162C6B; --tb-groen:#22C55E; --tb-licht:#9DB1E8;}
+.cv-topbar{background:var(--tb-navy);border-bottom:3px solid var(--tb-groen);padding:0 24px;min-height:64px;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:var(--cv-shadow-sm)}
+.cv-topbar-logo{display:flex;align-items:center;gap:12px;padding:10px 0}
+.cv-logotegel{width:40px;height:40px;background:var(--cv-white);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cv-logotegel svg{width:24px;height:24px}
+.cv-woordmerk{line-height:1.05}
+.cv-woordmerk .naam{font-size:19px;font-weight:800;color:var(--cv-white);letter-spacing:-.02em}
+.cv-woordmerk .naam em{font-style:normal;color:var(--tb-groen)}
+.cv-woordmerk .door{display:block;font-size:9px;font-weight:700;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--tb-licht);margin-top:2px}
+.cv-topbar-scheiding{width:1px;height:30px;background:rgba(255,255,255,.35)}
+.cv-topbar-nav{display:flex;gap:2px;flex-wrap:wrap}
+.cv-topbar-nav .tab{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:rgba(255,255,255,.75);background:none;border:none;border-bottom:3px solid transparent;
+  padding:22px 14px 19px;transition:color .15s,border-color .15s}
+.cv-topbar-nav .tab:hover{color:var(--cv-white)}
+.cv-topbar-nav .tab.actief{color:var(--cv-white);border-bottom-color:var(--tb-groen)}
+
+/* ---------- werkbalk ---------- */
+#werkbalk{background:var(--cv-white);border-bottom:1px solid var(--cv-grey-200);padding:10px 24px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.knop{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:8px 14px;
+  border-radius:var(--cv-radius-sm);border:2px solid var(--cv-grey-200);background:transparent;color:var(--cv-grey-700);
+  transition:background .18s,color .18s,border-color .18s}
+.knop:hover{background:var(--cv-grey-100);border-color:var(--cv-grey-400)}
+.knop.primair{background:var(--cv-blue);border-color:var(--cv-blue);color:var(--cv-white)}
+.knop.primair:hover{background:var(--cv-blue-dark);border-color:var(--cv-blue-dark)}
+.knop.gevaar{background:var(--cv-white);border-color:var(--cv-grey-200);color:var(--cv-error)}
+.knop.gevaar:hover{background:#FEE2E2;border-color:var(--cv-error)}
+.knop.klein{padding:5px 10px;font-size:11px}
+.knop.klein.lotweg{color:var(--cv-grey-400);padding:5px 8px}
+.knop.klein.lotweg:hover{color:var(--cv-error);border-color:var(--cv-error);background:#FEE2E2}
+#projectkeuze{font-family:var(--cv-font);font-size:15px;color:var(--cv-dark);background:var(--cv-white);
+  border:1.5px solid var(--cv-grey-200);border-radius:var(--cv-radius-sm);padding:8px 12px;max-width:280px;outline:none;
+  transition:border-color .18s,box-shadow .18s}
+#projectkeuze:focus{border-color:var(--cv-blue);box-shadow:0 0 0 3px rgba(13,123,191,.15)}
+#werkbalk{position:sticky;top:0;z-index:20}
+.scheiding{width:1px;height:24px;background:var(--cv-grey-200);margin:0 4px}
+
+/* uitklapmenu's */
+.menuwrap{position:relative}
+.menu{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:220px;background:var(--cv-white);
+  border:1px solid var(--cv-grey-200);border-radius:var(--cv-radius-md);box-shadow:var(--cv-shadow-md);
+  padding:6px;z-index:30}
+.menuwrap.open .menu{display:block}
+.menuwrap.open>.knop{background:var(--cv-blue-light);border-color:var(--cv-blue);color:var(--cv-blue)}
+.menuwrap.open>.knop.primair{background:var(--cv-blue-dark);border-color:var(--cv-blue-dark);color:var(--cv-white)}
+.menu button{display:block;width:100%;text-align:left;background:none;border:none;border-radius:var(--cv-radius-sm);
+  padding:9px 12px;font-size:13px;font-weight:600;color:var(--cv-dark)}
+.menu button:hover{background:var(--cv-blue-light);color:var(--cv-blue)}
+.menu button.gevaarlijk{color:var(--cv-error)}
+.menu button.gevaarlijk:hover{background:#FEE2E2;color:var(--cv-error)}
+.menu .menuscheiding{height:1px;background:var(--cv-grey-200);margin:5px 4px}
+.menu .menukopje{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--cv-grey-400);padding:5px 12px 3px}
+.menu .sjabloonrij{display:flex;align-items:center}
+.menu .sjabloonrij button:first-child{flex:1}
+.menu .sjabloonrij .weg{width:auto;color:var(--cv-grey-400);font-size:11px;padding:6px 8px}
+.menu .sjabloonrij .weg:hover{color:var(--cv-error);background:#FEE2E2}
+.menu button small{display:block;font-weight:400;font-size:11px;color:var(--cv-grey-400)}
+
+/* KPI-kaarten (stijlgids §7) */
+#kpistrook{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px}
+.cv-kaart{background:var(--cv-white);border:1px solid var(--cv-grey-200);border-radius:var(--cv-radius-md);
+  padding:14px 16px;box-shadow:var(--cv-shadow-sm);display:flex;gap:12px;align-items:center;
+  transition:box-shadow .2s,transform .2s}
+.cv-kaart:hover{box-shadow:var(--cv-shadow-md);transform:translateY(-2px)}
+.cv-kaart .tegel{width:40px;height:40px;border-radius:var(--cv-radius-sm);background:var(--cv-blue-light);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cv-kaart .tegel.groen{background:var(--cv-green-light)}
+.cv-kaart .tegel.amber{background:#FEF3C7}
+.cv-kaart .tegel svg{width:20px;height:20px}
+.cv-kaart .waarde{font-size:24px;font-weight:700;color:var(--cv-blue);line-height:1.1}
+.cv-kaart .waarde.groen{color:var(--cv-green-dark)}
+.cv-kaart .omschrijving{font-size:11px;color:var(--cv-grey-700)}
+.cv-kaart .kop{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cv-grey-700)}
+.voortgangsbalk{height:6px;background:var(--cv-grey-200);border-radius:3px;overflow:hidden;margin-top:5px}
+.voortgangsbalk i{display:block;height:100%;background:linear-gradient(90deg,var(--cv-blue),var(--cv-green));
+  border-radius:3px;transition:width .4s ease}
+
+/* voortgang in lotkop */
+.lotvoortgang{display:flex;align-items:center;gap:8px;margin-left:14px}
+.lotvoortgang .voortgangsbalk{width:110px;margin-top:0}
+.lotvoortgang small{font-size:11px;font-weight:700;color:var(--cv-grey-700);min-width:32px}
+
+/* archiefbanner (stijlgids §8, waarschuwing) */
+#archiefbanner:empty{display:none}
+#archiefbanner{background:#FEF3C7;border-left:4px solid var(--cv-warning);color:#78350F;
+  border-radius:var(--cv-radius-sm);padding:12px 16px;font-size:13px;margin-bottom:14px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#archiefbanner b{display:block}
+#archiefbanner button{background:none;border:none;color:var(--cv-blue);font-weight:700;font-size:13px;
+  text-decoration:underline;padding:0;margin-left:auto}
+select optgroup{font-style:normal;font-weight:700;color:var(--cv-grey-400)}
+
+/* suggestiepaneel voor taken */
+#taaksuggesties{display:none;position:absolute;background:var(--cv-white);border:1px solid var(--cv-grey-200);
+  border-radius:var(--cv-radius-md);box-shadow:var(--cv-shadow-md);padding:5px;z-index:40;
+  max-height:260px;overflow:auto}
+#taaksuggesties.zichtbaar{display:block}
+#taaksuggesties .kopje{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--cv-grey-400);padding:5px 10px 4px}
+#taaksuggesties .item{padding:8px 12px;font-size:13px;font-weight:600;color:var(--cv-dark);
+  border-radius:var(--cv-radius-sm);cursor:pointer}
+#taaksuggesties .item:hover{background:var(--cv-blue-light);color:var(--cv-blue)}
+#taaksuggesties .item.huidig{color:var(--cv-blue)}
+#taaksuggesties .item.huidig::after{content:" ✓"}
+#taaksuggesties .item{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#taaksuggesties .verwijder-eigen{color:var(--cv-grey-400);font-size:11px;padding:2px 4px;border-radius:3px}
+#taaksuggesties .verwijder-eigen:hover{color:var(--cv-error);background:#FEE2E2}
+#taaksuggesties .voegrij{border-top:1px solid var(--cv-grey-200);margin-top:4px;padding:6px 4px 2px}
+#taaksuggesties .voegrij input{width:100%;font-family:var(--cv-font);font-size:13px;color:var(--cv-dark);
+  border:1.5px dashed var(--cv-grey-200);border-radius:var(--cv-radius-sm);padding:7px 10px;outline:none}
+#taaksuggesties .voegrij input:focus{border-style:solid;border-color:var(--cv-blue);
+  box-shadow:0 0 0 3px rgba(13,123,191,.15)}
+
+/* herstelpuntenvenster */
+#herstelvenster{display:none;position:fixed;inset:0;background:rgba(29,34,49,.45);z-index:60;
+  align-items:center;justify-content:center;padding:20px}
+#herstelvenster.open{display:flex}
+#herstelvenster .venster{background:var(--cv-white);border-radius:var(--cv-radius-md);
+  box-shadow:var(--cv-shadow-lg,0 8px 24px rgba(13,123,191,.18));width:100%;max-width:560px;
+  max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+#herstelvenster .vensterkop{background:var(--cv-blue);color:var(--cv-white);padding:14px 18px;
+  font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+#herstelvenster .sluit{background:none;border:none;color:var(--cv-white);font-size:16px;
+  padding:2px 6px;border-radius:var(--cv-radius-sm)}
+#herstelvenster .sluit:hover{background:rgba(255,255,255,.2)}
+#herstelvenster .vensterinhoud{padding:16px 18px;overflow:auto}
+#herstelvenster .uitleg{font-size:13px;color:var(--cv-grey-700);margin-bottom:14px}
+#herstelvenster .waarschuwing{font-size:12px;color:#78350F;background:#FEF3C7;
+  border-left:4px solid var(--cv-warning);border-radius:var(--cv-radius-sm);padding:10px 12px;margin-top:14px}
+.herstelrij{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--cv-grey-200);
+  border-radius:var(--cv-radius-sm);margin-bottom:8px}
+.herstelrij .wanneer{font-weight:700;font-size:13px;color:var(--cv-dark)}
+.herstelrij .inhoud{font-size:11px;color:var(--cv-grey-700)}
+.herstelrij .knop{margin-left:auto;flex-shrink:0}
+.herstelrij.nu{border-color:var(--cv-blue);background:var(--cv-blue-light)}
+#herstelpuntenlijst .leeg{font-size:13px;color:var(--cv-grey-400);font-style:italic;padding:8px 2px}
+
+/* melding onderaan */
+#melding{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+  background:var(--cv-dark);color:var(--cv-white);font-size:13px;font-weight:600;
+  padding:11px 20px;border-radius:var(--cv-radius-md);box-shadow:var(--cv-shadow-md);
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:50}
+#melding.zichtbaar{opacity:1;transform:translateX(-50%) translateY(0)}
+.knop:disabled{opacity:.45;cursor:default}
+.knop:disabled:hover{background:transparent;border-color:var(--cv-grey-200)}
+#opslagmelding{display:none;background:#FEF3C7;border-left:4px solid var(--cv-warning);color:#78350F;
+  padding:12px 24px;font-size:13px}
+#exportherinnering{display:none;background:var(--cv-blue-light);border-left:4px solid var(--cv-blue);
+  color:var(--cv-blue-dark);padding:10px 24px;font-size:13px}
+
+/* ---------- inhoud ---------- */
+main{background:var(--cv-white);min-height:70vh}
+.paneel{display:none;padding:16px 24px 32px}
+.paneel.actief{display:block}
+#lijstacties{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+#lijstacties .rechts{margin-left:auto;color:var(--cv-grey-700);font-size:13px;font-style:italic}
+
+/* ---------- lotblokken + gegevenstabel (stijlgids §9) ---------- */
+.lotblok{background:var(--cv-white);border:1px solid var(--cv-grey-200);border-radius:var(--cv-radius-md);
+  margin-bottom:16px;overflow:hidden;box-shadow:var(--cv-shadow-sm)}
+.lotkop{background:var(--cv-grey-100);padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.lotkop b{color:var(--cv-blue)}
+.lotkop input.lotnaam{font-family:var(--cv-font);font-size:15px;font-weight:700;color:var(--cv-blue);
+  background:transparent;border:1.5px solid transparent;border-radius:var(--cv-radius-sm);
+  padding:3px 6px;width:90px;outline:none}
+.lotkop input.lotomschrijving{font-family:var(--cv-font);font-size:14px;color:var(--cv-dark);
+  background:transparent;border:1.5px solid transparent;border-radius:var(--cv-radius-sm);
+  padding:3px 6px;flex:1;min-width:120px;max-width:340px;outline:none}
+.lotkop input.lotnaam:hover,.lotkop input.lotomschrijving:hover{border-color:var(--cv-grey-200);background:var(--cv-white)}
+.lotkop input.lotnaam:focus,.lotkop input.lotomschrijving:focus{border-color:var(--cv-blue);background:var(--cv-white);
+  box-shadow:0 0 0 3px rgba(13,123,191,.15)}
+.lotkop .pijl{transition:transform .15s;font-size:11px;color:var(--cv-grey-400)}
+.lotblok.dicht .pijl{transform:rotate(-90deg)}
+.lotkop .lotinfo{color:var(--cv-grey-700);font-size:13px;margin-left:auto}
+.lotblok.dicht table{display:none}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--cv-blue);color:var(--cv-white);font-size:11px;font-weight:600;letter-spacing:.03em;
+  text-transform:uppercase;padding:10px 12px;text-align:left;white-space:nowrap}
+td{padding:6px 10px;border-bottom:1px solid var(--cv-grey-200);vertical-align:middle}
+tbody tr:nth-child(even){background:var(--cv-grey-100)}
+tbody tr:hover td{background:var(--cv-blue-light)}
+tr.markeer td{background:var(--cv-green-light)}
+td input[type=text],td input[type=date],td input[type=number],td select{
+  font-family:var(--cv-font);font-size:13px;border:1.5px solid transparent;border-radius:var(--cv-radius-sm);
+  padding:5px 7px;background:transparent;width:100%;color:var(--cv-dark);outline:none;
+  transition:border-color .18s,box-shadow .18s}
+td input:hover,td select:hover{border-color:var(--cv-grey-200);background:var(--cv-white)}
+td input:focus,td select:focus{border-color:var(--cv-blue);background:var(--cv-white);box-shadow:0 0 0 3px rgba(13,123,191,.15)}
+td input[type=date]{min-width:130px}
+td.duur{white-space:nowrap;color:var(--cv-grey-700);text-align:center}
+td .id{font-weight:700;white-space:nowrap;color:var(--cv-dark)}
+.st-Voltooid{color:var(--cv-green-dark);font-weight:600}
+.st-Inuitvoering{color:var(--cv-blue-dark);font-weight:600}
+.st-Nietgestart{color:var(--cv-grey-700)}
+.st-Geblokkeerd{color:var(--cv-error);font-weight:600}
+.verwijder{border:none;background:none;color:var(--cv-error);font-size:15px;padding:2px 6px;border-radius:var(--cv-radius-sm);opacity:.45}
+.verplaats{border:none;background:none;color:var(--cv-blue);font-size:12px;padding:2px 5px;border-radius:var(--cv-radius-sm);opacity:.45}
+.verwijder:hover{background:#FEE2E2}
+.verplaats:hover{background:var(--cv-blue-light)}
+.verplaats:disabled{color:var(--cv-grey-400);cursor:default;background:none;opacity:.25}
+tr:hover .verwijder,tr:hover .verplaats{opacity:1}
+
+/* ---------- gantt ---------- */
+.ganttscroll{overflow:auto;border:1px solid var(--cv-grey-200);border-radius:var(--cv-radius-md);max-height:72vh;box-shadow:var(--cv-shadow-sm)}
+.ganttgrid{display:grid;width:max-content;font-size:13px}
+.gcel{border-right:1px solid var(--cv-grey-200);border-bottom:1px solid var(--cv-grey-200);position:relative;background:var(--cv-white)}
+.glabel{position:sticky;left:0;background:var(--cv-white);z-index:2;padding:5px 10px;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;border-right:2px solid var(--cv-grey-200)}
+.gkop{position:sticky;top:0;z-index:3;background:var(--cv-blue);color:var(--cv-white);text-align:center;
+  padding:5px 0 4px;font-weight:600;font-size:11px;border-right:1px solid rgba(255,255,255,.15)}
+.gkop small{display:block;font-weight:400;color:var(--cv-blue-light);font-size:10px}
+.gkop.hoek{left:0;z-index:4;text-align:left;padding-left:10px;text-transform:uppercase;letter-spacing:.03em;
+  border-right:2px solid rgba(255,255,255,.3)}
+.gkop.nu{background:var(--cv-warning)}
+.gcel.nu{background:var(--oranje-licht)}
+.glotband{background:var(--cv-grey-100);font-weight:700;color:var(--cv-blue)}
+.glotband.glabel{background:var(--cv-grey-100)}
+.gprojband{background:var(--cv-blue);color:var(--cv-white);font-weight:700}
+.gprojband.glabel{background:var(--cv-blue)}
+.gbalk{position:absolute;top:5px;bottom:5px;border-radius:var(--cv-radius-sm);cursor:pointer;overflow:hidden;z-index:1}
+.gbalk .vg{position:absolute;left:0;top:0;bottom:0;background:var(--cv-green);opacity:.85}
+.gbalk:hover{outline:2px solid var(--cv-blue-dark)}
+.legende{display:flex;gap:20px;align-items:center;padding:12px 4px;color:var(--cv-grey-700);font-size:13px;flex-wrap:wrap}
+.legende span{display:inline-flex;align-items:center;gap:6px}
+.legende i{width:16px;height:12px;border-radius:2px;display:inline-block}
+
+
+@media print{#werkbalk,.cv-topbar-nav,.legende,#lijstacties{display:none}}
+</style>
+</head>
+<body>
+
+<header class="cv-topbar">
+  <div class="cv-topbar-logo">
+    <span class="cv-logotegel"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="3" y="4"  width="13" height="4" rx="1.4" fill="#1D3886"/>
+        <rect x="7" y="10" width="14" height="4" rx="1.4" fill="#22C55E"/>
+        <rect x="5" y="16" width="10" height="4" rx="1.4" fill="#1D3886"/>
+      </svg></span>
+    <span class="cv-woordmerk">
+      <span class="naam">project<em>planning</em></span>
+      <span class="door">by CvoorU</span>
+    </span>
+  </div>
+  <span class="cv-topbar-scheiding"></span>
+  <nav class="cv-topbar-nav" id="tabs">
+    <button class="tab actief" data-paneel="lijst">Takenlijst</button>
+    <button class="tab" data-paneel="gantt">Weekplanning</button>
+    <button class="tab" data-paneel="totaal">Totaalplanning</button>
+  </nav>
+</header>
+
+<div id="exportherinnering"></div>
+<div id="opslagmelding">Opgelet: automatische opslag is in deze browser niet beschikbaar. Gebruik "Exporteer gegevens" om je werk te bewaren en "Importeer gegevens" om het later terug te laden.</div>
+
+<div id="werkbalk">
+  <label for="projectkeuze" style="color:var(--cv-grey-700);font-size:13px;font-weight:600">Project:</label>
+  <select id="projectkeuze"></select>
+  <div class="menuwrap">
+    <button class="knop primair" id="menuknopProject" title="Projectacties">Project ▾</button>
+    <div class="menu">
+      <button id="knopNieuwProject">+ Nieuw project (leeg)…</button>
+      <div class="menuscheiding"></div>
+      <div class="menukopje">Start uit sjabloon</div>
+      <div id="sjabloonlijst"></div>
+      <button id="knopBewaarSjabloon">Bewaar huidig project als sjabloon…</button>
+      <div class="menuscheiding"></div>
+      <button id="knopHernoemProject">Hernoem project…</button>
+      <button id="knopArchiveerProject">Archiveer project…</button>
+      <div class="menuscheiding"></div>
+      <button id="knopVerwijderProject" class="gevaarlijk">Verwijder project…</button>
+    </div>
+  </div>
+  <span class="scheiding"></span>
+  <button class="knop" id="knopOngedaan">↩ Ongedaan maken</button>
+  <div class="menuwrap">
+    <button class="knop" id="menuknopGegevens">Gegevens ▾</button>
+    <div class="menu">
+      <div class="menukopje">Reservekopie</div>
+      <button id="knopExportJson">Bewaar reservekopie (JSON)…</button>
+      <button id="knopImportJson">Herstel uit reservekopie…</button>
+      <div class="menuscheiding"></div>
+      <div class="menukopje">Automatisch bewaard</div>
+      <button id="knopHerstelpunten">Herstelpunten…</button>
+      <div class="menuscheiding"></div>
+      <button id="knopExportCsv">Exporteer CSV (Excel)</button>
+    </div>
+  </div>
+  <input type="file" id="importBestand" accept=".json" style="display:none">
+</div>
+
+
+<main>
+  <div class="paneel actief" id="paneel-lijst">
+    <div id="archiefbanner"></div>
+    <div id="kpistrook"></div>
+    <div id="lijstacties">
+      <button class="knop" id="knopNieuwLot">+ Nieuw lot</button>
+      <span class="rechts" style="color:var(--tekst-licht);font-size:12.5px;font-style:italic">
+        Klik op een waarde om ze te bewerken • gebruik ▲▼ (rechts in de rij) om een taak binnen het lot te verschuiven — de planning herrekent zich automatisch.</span>
+    </div>
+    <div id="lijstinhoud"></div>
+  </div>
+
+  <div class="paneel" id="paneel-gantt">
+    <div class="ganttscroll"><div class="ganttgrid" id="ganttgrid"></div></div>
+    <div class="legende">
+      <b style="color:var(--tekst)">Legende:</b>
+      <span><i style="background:var(--voltooid)"></i>Voltooid</span>
+      <span><i style="background:var(--uitvoering)"></i>In uitvoering</span>
+      <span><i style="background:var(--gepland)"></i>Niet gestart</span>
+      <span><i style="background:var(--geblokkeerd)"></i>Geblokkeerd</span>
+      <span><i style="background:var(--oranje)"></i>Huidige week</span>
+      <span style="margin-left:auto;font-style:italic">Klik op een balk om de taak in de takenlijst te openen.</span>
+    </div>
+  </div>
+
+  <div class="paneel" id="paneel-totaal">
+    <div class="ganttscroll"><div class="ganttgrid" id="totaalgrid"></div></div>
+    <div class="legende">
+      <b style="color:var(--tekst)">Totaalplanning:</b>
+      <span>één balk per lot (van eerste start tot laatste einde), gegroepeerd per project.</span>
+      <span style="margin-left:auto;font-style:italic">Klik op een lotbalk om dat project te openen.</span>
+    </div>
+  </div>
+</main>
+
+<div id="melding"></div>
+
+<div id="herstelvenster" role="dialog" aria-modal="true">
+  <div class="venster">
+    <div class="vensterkop">
+      <span>Herstelpunten</span>
+      <button class="sluit" id="knopSluitHerstel" title="Sluiten">✕</button>
+    </div>
+    <div class="vensterinhoud">
+      <p class="uitleg">De app bewaart automatisch momentopnames van je volledige planning.
+        Kies een moment om naar terug te keren — je huidige toestand blijft herstelbaar via Ongedaan maken.</p>
+      <div id="herstelpuntenlijst"></div>
+      <p class="waarschuwing">Deze herstelpunten staan in deze browser. Voor een echte reservekopie
+        buiten de browser gebruik je <b>Bewaar reservekopie (JSON)</b> — bewaar dat bestand op een schijf of netwerkmap.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   WERFPLANNING — zelfstandig HTML-bestand, meerdere projecten
+   Cascaderegels (per lot, binnen een project):
+     • Startdatum gewijzigd -> taak behoudt zijn duur, alles erna schuift mee.
+     • Einddatum gewijzigd  -> duur van die taak verandert, alles erna schuift mee.
+     • Volgende taken behouden hun eigen duur en buffer t.o.v. de vorige taak.
+     • Loten en projecten lopen parallel en beïnvloeden elkaar niet.
+   ===================================================================== */
+
+const STATUSSEN = ["Niet gestart","In uitvoering","Voltooid","Geblokkeerd"];
+const PRIORITEITEN = ["Laag","Medium","Hoog"];
+const FASEN = ["Ontwerp","Bestek","Publiceren","Gunning","Aanstelling architect","Voorontwerp","Definitief ontwerp","Aanbesteding aannemer","Uitvoering","Nazorg"];
+const TAAKCATALOGUS = {
+  "Ontwerp": [
+    "Inventarisatie / oplijsting / offerte vraag"
+  ],
+  "Bestek": [
+    "Bestek maken",
+    "3P invoer"
+  ],
+  "Publiceren": [
+    "e-Procurement invoeren",
+    "Verslag plaatsbezoek"
+  ],
+  "Gunning": [
+    "Offerte vergelijking",
+    "Verslag van nazicht",
+    "CBS beslissing",
+    "Brief niet-gunning",
+    "Brief gunning",
+    "Standstill"
+  ],
+  "Aanstelling architect": [
+    "Opmaak opdrachtdocumenten Architect",
+    "Agenderen opdrachtdocumenten Architect",
+    "[B] Goedkeuring opdrachtdocumenten Architect",
+    "Publicatie/offertevraag versturen",
+    "Opmaak offertes",
+    "Indienen offertes",
+    "Vergelijking offerten + gunningsverslag",
+    "Agenderen gunning Architect",
+    "[B] Gunning opdracht Architect",
+    "Briefwisseling gunning Architect"
+  ],
+  "Voorontwerp": [
+    "Startvergadering (na briefwisseling niet-gunning)",
+    "Offertevraag bijkomende diensten (SOP-EPB-VC-...)",
+    "Inwerking in het dossier",
+    "Onderzoek besparingsronde -10%",
+    "Aanpassing Voorontwerp (met 10% besparing)",
+    "Finaal Voorontwerp",
+    "Agenderen voorontwerp",
+    "[B] Goedkeuring Voorontwerp"
+  ],
+  "Definitief ontwerp": [
+    "Offertevraag bijkomende diensten (SOP-EPB-VC-...)",
+    "Opmaak Uitvoeringsdossier",
+    "Nazicht dienst Gebouwen",
+    "Correcties SB/AR dossier",
+    "Aanleveren gecorrigeerd dossier",
+    "Agenderen opdrachtdocumenten AB dossier",
+    "[B] Goedkeuring definitief ontwerp (= AB dossier)",
+    "Opmaak vergunningsdossier",
+    "Aanleveren vergunningsdossier",
+    "Indienen vergunningsaanvraag",
+    "Vergunningsprocedure - nazicht volledigheid",
+    "Vergunningsprocedure - zonder openbaar onderzoek",
+    "Vergunningsprocedure - Aanplakking"
+  ],
+  "Aanbesteding aannemer": [
+    "Publicatie/offertevraag versturen",
+    "Opmaak offertes",
+    "Indienen offertes",
+    "Vergelijking offertes + gunningsverslag",
+    "Prijsverantwoording (optioneel)",
+    "Finalisatie gunningsverslag",
+    "[B] Gunning",
+    "Opt. versturen brief niet-gunning + melding stand-still",
+    "Opt. stand-still (enkel verplicht bij EU-opdrachten)",
+    "Sluiting gunning"
+  ],
+  "Uitvoering": [
+    "Aanvangsbevel",
+    "Startvergadering",
+    "Uitvoering",
+    "[C] Melding einde der werken + uitnodiging CBS VO",
+    "Rondgang Voorlopige oplevering",
+    "[B] PV VO + Eindstaat",
+    "Gegevens naar beheer (FMIS)",
+    "Overdracht naar onderhoudsbeheer",
+    "Onderhoudscontracten afsluiten (eigenaar)"
+  ],
+  "Nazorg": [
+    "Opmaak opmerkingenlijst",
+    "[B] Definitieve oplevering - CBS opmerkingen + aannemer uitnodigen",
+    "Rondgang definitieve oplevering (indien nodig)",
+    "[B] PV definitieve oplevering + vrijgave borgtocht 2"
+  ]
+};
+const OPSLAGSLEUTEL = "werfplanning_v2";
+const OUDE_SLEUTEL  = "werfplanning_gebouw21_v1";
+
+const SEED_STATE = {"projecten":[{"id":"P1","naam":"Gebouw 21","taken":[{"id":"T001","lot":"Lot 1","lot_omschrijving":"Plaatsing sectionaalpoorten","taak":"Inventarisatie / oplijsting / offerte vraag","fase":"Ontwerp","start":"2026-06-03","einde":"2026-06-16","status":"Voltooid","voortgang":100,"prioriteit":"Laag","opmerking":"2 inschrijvers"},{"id":"T002","lot":"Lot 1","lot_omschrijving":"Plaatsing sectionaalpoorten","taak":"Bestek opmaken","fase":"Bestek","start":"2026-06-17","einde":"2026-07-14","status":"Voltooid","voortgang":100,"prioriteit":"Laag","opmerking":"2 inschrijvers • 2 inschrijvers"},{"id":"T004","lot":"Lot 1","lot_omschrijving":"Plaatsing sectionaalpoorten","taak":"Publiceren","fase":"Publiceren","start":"2026-07-15","einde":"2026-07-28","status":"Voltooid","voortgang":100,"prioriteit":"Laag","opmerking":"2 inschrijvers"},{"id":"T005","lot":"Lot 1","lot_omschrijving":"Plaatsing sectionaalpoorten","taak":"Gunning","fase":"Gunning","start":"2026-07-29","einde":"2026-08-11","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"2 inschrijvers"},{"id":"T006","lot":"Lot 1","lot_omschrijving":"Plaatsing sectionaalpoorten","taak":"Uitvoering","fase":"Uitvoering","start":"2026-09-12","einde":"2026-09-25","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"2 inschrijvers"},{"id":"T007","lot":"Lot 2","lot_omschrijving":"Buitenaanleg en riolering","taak":"Inventarisatie / oplijsting / offerte vraag","fase":"Ontwerp","start":"2026-08-18","einde":"2026-08-31","status":"In uitvoering","voortgang":45,"prioriteit":"Laag","opmerking":"bestelbon"},{"id":"T008","lot":"Lot 2","lot_omschrijving":"Buitenaanleg en riolering","taak":"Bestek opmaken","fase":"Bestek","start":"2026-09-01","einde":"2026-09-28","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":"bestelbon • bestelbon"},{"id":"T010","lot":"Lot 2","lot_omschrijving":"Buitenaanleg en riolering","taak":"Publiceren","fase":"Publiceren","start":"2026-09-29","einde":"2026-10-12","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":"bestelbon"},{"id":"T011","lot":"Lot 2","lot_omschrijving":"Buitenaanleg en riolering","taak":"Gunning","fase":"Gunning","start":"2026-10-13","einde":"2026-10-26","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"bestelbon"},{"id":"T012","lot":"Lot 2","lot_omschrijving":"Buitenaanleg en riolering","taak":"Uitvoering","fase":"Uitvoering","start":"2026-09-27","einde":"2026-10-10","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"bestelbon"},{"id":"T013","lot":"Lot 3","lot_omschrijving":"Vervangen plat dak","taak":"Inventarisatie / oplijsting / offerte vraag","fase":"Ontwerp","start":"2026-08-02","einde":"2026-08-15","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":"3P"},{"id":"T014","lot":"Lot 3","lot_omschrijving":"Vervangen plat dak","taak":"Bestek opmaken","fase":"Bestek","start":"2026-08-16","einde":"2026-09-12","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":"3P • 3P"},{"id":"T016","lot":"Lot 3","lot_omschrijving":"Vervangen plat dak","taak":"Publiceren","fase":"Publiceren","start":"2026-09-13","einde":"2026-09-26","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":"3P"},{"id":"T017","lot":"Lot 3","lot_omschrijving":"Vervangen plat dak","taak":"Gunning","fase":"Gunning","start":"2026-09-27","einde":"2026-10-10","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"3P"},{"id":"T018","lot":"Lot 3","lot_omschrijving":"Vervangen plat dak","taak":"Uitvoering","fase":"Uitvoering","start":"2026-10-11","einde":"2026-10-24","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"3P"},{"id":"T019","lot":"Lot 4","lot_omschrijving":"Vervangen buitenschrijnwerk gelijkvloers","taak":"Inventarisatie / oplijsting / offerte vraag","fase":"Ontwerp","start":"2026-08-18","einde":"2026-08-31","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":"oplijsting via bestaande meetstaat / 3P"},{"id":"T020","lot":"Lot 4","lot_omschrijving":"Vervangen buitenschrijnwerk gelijkvloers","taak":"Bestek opmaken","fase":"Bestek","start":"2026-09-01","einde":"2026-09-28","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":"oplijsting via bestaande meetstaat / 3P • oplijsting via bestaande meetstaat / 3P"},{"id":"T022","lot":"Lot 4","lot_omschrijving":"Vervangen buitenschrijnwerk gelijkvloers","taak":"Publiceren","fase":"Publiceren","start":"2026-09-29","einde":"2026-10-12","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":"oplijsting via bestaande meetstaat / 3P"},{"id":"T023","lot":"Lot 4","lot_omschrijving":"Vervangen buitenschrijnwerk gelijkvloers","taak":"Gunning","fase":"Gunning","start":"2026-10-13","einde":"2026-10-26","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"oplijsting via bestaande meetstaat / 3P"},{"id":"T024","lot":"Lot 4","lot_omschrijving":"Vervangen buitenschrijnwerk gelijkvloers","taak":"Uitvoering","fase":"Uitvoering","start":"2026-10-27","einde":"2026-11-09","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"oplijsting via bestaande meetstaat / 3P"},{"id":"T025","lot":"Lot 5","lot_omschrijving":"Sanitair","taak":"Inventarisatie / oplijsting / offerte vraag","fase":"Ontwerp","start":"2026-10-01","einde":"2026-10-14","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":""},{"id":"T026","lot":"Lot 5","lot_omschrijving":"Sanitair","taak":"Bestek opmaken","fase":"Bestek","start":"2026-10-15","einde":"2026-11-11","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":""},{"id":"T028","lot":"Lot 5","lot_omschrijving":"Sanitair","taak":"Publiceren","fase":"Publiceren","start":"2026-11-12","einde":"2026-11-25","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T029","lot":"Lot 5","lot_omschrijving":"Sanitair","taak":"Gunning","fase":"Gunning","start":"2026-11-26","einde":"2026-12-09","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":""},{"id":"T030","lot":"Lot 5","lot_omschrijving":"Sanitair","taak":"Uitvoering","fase":"Uitvoering","start":"2026-12-10","einde":"2026-12-23","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":""},{"id":"T031","lot":"Lot 7a","lot_omschrijving":"HVAC aanstellen Ing Tech","taak":"Inventarisatie / oplijsting / offerte vraag","fase":"Ontwerp","start":"2026-08-16","einde":"2026-08-29","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":""},{"id":"T032","lot":"Lot 7a","lot_omschrijving":"HVAC aanstellen Ing Tech","taak":"Bestek opmaken","fase":"Bestek","start":"2026-08-30","einde":"2026-09-26","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":""},{"id":"T034","lot":"Lot 7a","lot_omschrijving":"HVAC aanstellen Ing Tech","taak":"Publiceren","fase":"Publiceren","start":"2026-09-27","einde":"2026-10-10","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T035","lot":"Lot 7a","lot_omschrijving":"HVAC aanstellen Ing Tech","taak":"Gunning","fase":"Gunning","start":"2026-10-11","einde":"2026-10-24","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":""},{"id":"T036","lot":"Lot 7a","lot_omschrijving":"HVAC aanstellen Ing Tech","taak":"Uitvoering","fase":"Uitvoering","start":"2026-10-25","einde":"2026-11-07","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":""},{"id":"T037","lot":"Lot 7b","lot_omschrijving":"HVAC","taak":"Inventarisatie / oplijsting / offerte vraag","fase":"Ontwerp","start":"2026-12-02","einde":"2026-12-15","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":"3P"},{"id":"T038","lot":"Lot 7b","lot_omschrijving":"HVAC","taak":"Bestek opmaken","fase":"Bestek","start":"2026-12-16","einde":"2027-01-12","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":"3P • 3P"},{"id":"T040","lot":"Lot 7b","lot_omschrijving":"HVAC","taak":"Publiceren","fase":"Publiceren","start":"2027-01-13","einde":"2027-01-26","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":"3P"},{"id":"T041","lot":"Lot 7b","lot_omschrijving":"HVAC","taak":"Gunning","fase":"Gunning","start":"2027-01-27","einde":"2027-02-09","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"3P"},{"id":"T042","lot":"Lot 7b","lot_omschrijving":"HVAC","taak":"Uitvoering","fase":"Uitvoering","start":"2027-02-10","einde":"2027-02-23","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"3P"},{"id":"T043","lot":"Lot 8","lot_omschrijving":"Elektriciteit","taak":"Inventarisatie / oplijsting / offerte vraag","fase":"Ontwerp","start":"2026-10-16","einde":"2026-10-29","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":""},{"id":"T044","lot":"Lot 8","lot_omschrijving":"Elektriciteit","taak":"Bestek opmaken","fase":"Bestek","start":"2026-10-30","einde":"2026-11-26","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":""},{"id":"T046","lot":"Lot 8","lot_omschrijving":"Elektriciteit","taak":"Publiceren","fase":"Publiceren","start":"2026-11-27","einde":"2026-12-10","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T047","lot":"Lot 8","lot_omschrijving":"Elektriciteit","taak":"Gunning","fase":"Gunning","start":"2026-12-11","einde":"2026-12-24","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":""},{"id":"T048","lot":"Lot 8","lot_omschrijving":"Elektriciteit","taak":"Uitvoering","fase":"Uitvoering","start":"2026-12-25","einde":"2027-01-07","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":""},{"id":"T049","lot":"Lot 9","lot_omschrijving":"Plaatsen brandcentrale","taak":"Inventarisatie / oplijsting / offerte vraag","fase":"Ontwerp","start":"2026-11-02","einde":"2026-11-15","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":"3P"},{"id":"T050","lot":"Lot 9","lot_omschrijving":"Plaatsen brandcentrale","taak":"Bestek opmaken","fase":"Bestek","start":"2026-11-16","einde":"2026-12-13","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":"3P • 3P"},{"id":"T052","lot":"Lot 9","lot_omschrijving":"Plaatsen brandcentrale","taak":"Publiceren","fase":"Publiceren","start":"2026-12-14","einde":"2026-12-27","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":"3P"},{"id":"T053","lot":"Lot 9","lot_omschrijving":"Plaatsen brandcentrale","taak":"Gunning","fase":"Gunning","start":"2026-12-28","einde":"2027-01-10","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"3P"},{"id":"T054","lot":"Lot 9","lot_omschrijving":"Plaatsen brandcentrale","taak":"Uitvoering","fase":"Uitvoering","start":"2027-01-11","einde":"2027-01-24","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"3P"},{"id":"T055","lot":"Lot 10","lot_omschrijving":"Afwerking (binnendeuren en valse plafonds)","taak":"Inventarisatie / oplijsting / offerte vraag","fase":"Ontwerp","start":"2026-12-01","einde":"2026-12-14","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":"bestelbon?"},{"id":"T056","lot":"Lot 10","lot_omschrijving":"Afwerking (binnendeuren en valse plafonds)","taak":"Bestek opmaken","fase":"Bestek","start":"2026-12-15","einde":"2027-01-11","status":"Niet gestart","voortgang":0,"prioriteit":"Laag","opmerking":"bestelbon? • bestelbon?"},{"id":"T058","lot":"Lot 10","lot_omschrijving":"Afwerking (binnendeuren en valse plafonds)","taak":"Publiceren","fase":"Publiceren","start":"2027-01-12","einde":"2027-01-25","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":"bestelbon?"},{"id":"T059","lot":"Lot 10","lot_omschrijving":"Afwerking (binnendeuren en valse plafonds)","taak":"Gunning","fase":"Gunning","start":"2027-01-26","einde":"2027-02-08","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"bestelbon?"},{"id":"T060","lot":"Lot 10","lot_omschrijving":"Afwerking (binnendeuren en valse plafonds)","taak":"Uitvoering","fase":"Uitvoering","start":"2027-02-09","einde":"2027-02-22","status":"Niet gestart","voortgang":0,"prioriteit":"Hoog","opmerking":"bestelbon?"}]}],"actief":"P1"};
+const SJABLOON_ARBA = {naam:"Project+AR+BA",taken:[{"id":"T001","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Opmaak opdrachtdocumenten Architect","fase":"Aanstelling architect","wie":"projectleider","start":"2026-06-01","einde":"2026-06-20","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T002","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Agenderen opdrachtdocumenten Architect","fase":"Aanstelling architect","wie":"projectleider","start":"2026-06-21","einde":"2026-06-21","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T003","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"[B] Goedkeuring opdrachtdocumenten Architect","fase":"Aanstelling architect","wie":"CBS","start":"2026-06-22","einde":"2026-06-22","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T004","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Publicatie/offertevraag versturen","fase":"Aanstelling architect","wie":"administratie","start":"2026-06-23","einde":"2026-06-27","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T005","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Opmaak offertes","fase":"Aanstelling architect","wie":"projectleider","start":"2026-06-28","einde":"2026-07-27","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T006","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Indienen offertes","fase":"Aanstelling architect","wie":"studiebureau","start":"2026-07-28","einde":"2026-07-28","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T007","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Vergelijking offerten + gunningsverslag","fase":"Aanstelling architect","wie":"projectleider","start":"2026-07-29","einde":"2026-09-06","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T008","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Agenderen gunning Architect","fase":"Aanstelling architect","wie":"projectleider","start":"2026-09-07","einde":"2026-09-11","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T009","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"[B] Gunning opdracht Architect","fase":"Aanstelling architect","wie":"CBS","start":"2026-09-12","einde":"2026-09-12","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T010","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Briefwisseling gunning Architect","fase":"Aanstelling architect","wie":"administratie","start":"2026-09-13","einde":"2026-09-21","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T011","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Startvergadering (na briefwisseling niet-gunning)","fase":"Voorontwerp","wie":"studiebureau, projectleider","start":"2026-09-22","einde":"2026-09-26","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T012","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Offertevraag bijkomende diensten (SOP-EPB-VC-...)","fase":"Voorontwerp","wie":"projectleider","start":"2026-09-27","einde":"2026-10-18","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T013","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Inwerking in het dossier","fase":"Voorontwerp","wie":"studiebureau","start":"2026-10-19","einde":"2026-10-23","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T014","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Onderzoek besparingsronde -10%","fase":"Voorontwerp","wie":"studiebureau","start":"2026-10-24","einde":"2026-11-17","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T015","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Aanpassing Voorontwerp (met 10% besparing)","fase":"Voorontwerp","wie":"studiebureau","start":"2026-11-18","einde":"2026-12-02","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T016","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Finaal Voorontwerp","fase":"Voorontwerp","wie":"studiebureau","start":"2026-12-03","einde":"2026-12-03","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T017","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Agenderen voorontwerp","fase":"Voorontwerp","wie":"projectleider","start":"2026-12-04","einde":"2026-12-04","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T018","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"[B] Goedkeuring Voorontwerp","fase":"Voorontwerp","wie":"CBS","start":"2026-12-05","einde":"2026-12-09","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T019","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Offertevraag bijkomende diensten (SOP-EPB-VC-...)","fase":"Definitief ontwerp","wie":"studiebureau","start":"2026-12-10","einde":"2026-12-29","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T020","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Opmaak Uitvoeringsdossier","fase":"Definitief ontwerp","wie":"studiebureau","start":"2026-12-30","einde":"2027-02-27","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T021","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Nazicht dienst Gebouwen","fase":"Definitief ontwerp","wie":"projectleider","start":"2027-02-28","einde":"2027-03-09","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T022","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Correcties SB/AR dossier","fase":"Definitief ontwerp","wie":"studiebureau","start":"2027-03-10","einde":"2027-03-18","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T023","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Aanleveren gecorrigeerd dossier","fase":"Definitief ontwerp","wie":"studiebureau","start":"2027-03-19","einde":"2027-03-19","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T024","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Agenderen opdrachtdocumenten AB dossier","fase":"Definitief ontwerp","wie":"projectleider","start":"2027-03-20","einde":"2027-03-20","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T025","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"[B] Goedkeuring definitief ontwerp (= AB dossier)","fase":"Definitief ontwerp","wie":"GR, CBS","start":"2027-03-21","einde":"2027-04-11","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T026","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Opmaak vergunningsdossier","fase":"Definitief ontwerp","wie":"studiebureau","start":"2027-04-12","einde":"2027-05-11","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T027","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Aanleveren vergunningsdossier","fase":"Definitief ontwerp","wie":"studiebureau","start":"2027-05-12","einde":"2027-05-12","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T028","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Indienen vergunningsaanvraag","fase":"Definitief ontwerp","wie":"projectleider","start":"2027-05-13","einde":"2027-05-13","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T029","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Vergunningsprocedure - nazicht volledigheid","fase":"Definitief ontwerp","wie":"projectleider","start":"2027-05-14","einde":"2027-06-04","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T030","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Vergunningsprocedure - zonder openbaar onderzoek","fase":"Definitief ontwerp","wie":"projectleider","start":"2027-06-05","einde":"2027-08-18","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T031","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Vergunningsprocedure - Aanplakking","fase":"Definitief ontwerp","wie":"projectleider","start":"2027-08-19","einde":"2027-09-09","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T032","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Publicatie/offertevraag versturen","fase":"Aanbesteding aannemer","wie":"administratie","start":"2027-09-10","einde":"2027-09-14","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T033","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Opmaak offertes","fase":"Aanbesteding aannemer","wie":"aannemer","start":"2027-09-15","einde":"2027-10-14","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T034","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Indienen offertes","fase":"Aanbesteding aannemer","wie":"aannemer","start":"2027-10-15","einde":"2027-10-15","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T035","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Vergelijking offertes + gunningsverslag","fase":"Aanbesteding aannemer","wie":"studiebureau, projectleider","start":"2027-10-16","einde":"2027-10-30","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T036","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Prijsverantwoording (optioneel)","fase":"Aanbesteding aannemer","wie":"aannemer","start":"2027-10-31","einde":"2027-11-09","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T037","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Finalisatie gunningsverslag","fase":"Aanbesteding aannemer","wie":"studiebureau, projectleider","start":"2027-11-10","einde":"2027-11-10","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T038","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"[B] Gunning","fase":"Aanbesteding aannemer","wie":"GR","start":"2027-11-11","einde":"2027-11-15","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T039","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Opt. versturen brief niet-gunning + melding stand-still","fase":"Aanbesteding aannemer","wie":"administratie","start":"2027-11-16","einde":"2027-11-19","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T040","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Opt. stand-still (enkel verplicht bij EU-opdrachten)","fase":"Aanbesteding aannemer","wie":"NVT","start":"2027-11-20","einde":"2027-11-29","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T041","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Sluiting gunning","fase":"Aanbesteding aannemer","wie":"administratie, projectleider","start":"2027-11-30","einde":"2027-12-09","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T042","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Startvergadering","fase":"Uitvoering","wie":"studiebureau, projectleider, aannemer","start":"2027-12-10","einde":"2027-12-19","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T043","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Uitvoering","fase":"Uitvoering","wie":"studiebureau, projectleider, aannemer","start":"2027-12-20","einde":"2028-07-06","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T044","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"[C] Melding einde der werken + uitnodiging CBS VO","fase":"Uitvoering","wie":"CBS, projectleider","start":"2028-07-07","einde":"2028-07-11","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T045","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Rondgang Voorlopige oplevering","fase":"Uitvoering","wie":"studiebureau, CBS, projectleider, aannemer","start":"2028-07-12","einde":"2028-07-21","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T046","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"[B] PV VO + Eindstaat","fase":"Uitvoering","wie":"CBS, projectleider","start":"2028-07-22","einde":"2028-08-10","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T047","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Gegevens naar beheer (FMIS)","fase":"Uitvoering","wie":"onderhoudsbeheerder, projectleider","start":"2028-08-11","einde":"2028-08-20","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T048","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Overdracht naar onderhoudsbeheer","fase":"Uitvoering","wie":"onderhoudsbeheerder, WEB, projectleider","start":"2028-08-21","einde":"2028-08-30","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T049","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Onderhoudscontracten afsluiten (eigenaar)","fase":"Uitvoering","wie":"onderhoudsbeheerder","start":"2028-08-31","einde":"2028-09-19","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T050","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Opmaak opmerkingenlijst","fase":"Nazorg","wie":"onderhoudsbeheerder, projectleider","start":"2028-09-20","einde":"2028-11-08","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T051","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"[B] Definitieve oplevering - CBS opmerkingen + aannemer uitnodigen","fase":"Nazorg","wie":"studiebureau, projectleider, aannemer","start":"2028-11-09","einde":"2028-11-09","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T052","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"Rondgang definitieve oplevering (indien nodig)","fase":"Nazorg","wie":"studiebureau, projectleider, aannemer","start":"2028-11-10","einde":"2028-11-19","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""},{"id":"T053","lot":"Dossier","lot_omschrijving":"Van aanstelling architect tot nazorg","taak":"[B] PV definitieve oplevering + vrijgave borgtocht 2","fase":"Nazorg","wie":"projectleider","start":"2028-11-20","einde":"2028-11-29","status":"Niet gestart","voortgang":0,"prioriteit":"Medium","opmerking":""}]};
+
+/* ---------- datumhulpen ---------- */
+function naarDatum(iso){ const [j,m,d]=iso.split("-").map(Number); return new Date(j,m-1,d); }
+function naarIso(dt){ const p=n=>String(n).padStart(2,"0"); return dt.getFullYear()+"-"+p(dt.getMonth()+1)+"-"+p(dt.getDate()); }
+function plusDagen(iso,n){ const d=naarDatum(iso); d.setDate(d.getDate()+n); return naarIso(d); }
+function verschilDagen(a,b){ return Math.round((naarDatum(a)-naarDatum(b))/86400000); }
+function toonDatum(iso){ const [j,m,d]=iso.split("-"); return d+"-"+m+"-"+j; }
+function maandagVan(dt){ const d=new Date(dt); d.setDate(d.getDate()-((d.getDay()+6)%7)); d.setHours(0,0,0,0); return d; }
+function volgendeMaandag(){ const d=maandagVan(new Date()); d.setDate(d.getDate()+7); return naarIso(d); }
+function isoWeek(dt){ const d=new Date(Date.UTC(dt.getFullYear(),dt.getMonth(),dt.getDate()));
+  const dag=d.getUTCDay()||7; d.setUTCDate(d.getUTCDate()+4-dag);
+  const j0=new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  return Math.ceil(((d-j0)/86400000+1)/7); }
+
+/* ---------- toestand ---------- */
+const app = {
+  projecten: [],
+  actief: null,
+
+  project(){ return this.projecten.find(p=>p.id===this.actief) || this.projecten[0]; },
+  projectMetId(id){ const p=this.projecten.find(p=>p.id===id); if(!p) throw new Error("Onbekend project"); return p; },
+  nieuwProjectId(){ const n=Math.max(0,...this.projecten.map(p=>parseInt(p.id.slice(1),10)||0))+1; return "P"+n; },
+
+  voegProjectToe(naam){
+    const p={id:this.nieuwProjectId(),naam,taken:[]};
+    this.projecten.push(p);
+    this.actief=p.id;
+    lotToevoegen(p,"Lot 1","");
+    return p.id;
+  },
+  verwijderProject(id){
+    if(this.projecten.length<=1) throw new Error("Er moet minstens één project overblijven.");
+    this.projecten=this.projecten.filter(p=>p.id!==id);
+    if(this.actief===id) this.actief=this.projecten[0].id;
+  },
+
+  serialiseer(){
+    return JSON.stringify({
+      actief:this.actief,
+      projecten:this.projecten.map(p=>({id:p.id,naam:p.naam,
+        taken:p.taken.map(({_duur,_buffer,...rest})=>rest)}))
+    });
+  },
+  laadUit(json){
+    const s=JSON.parse(json);
+    this.projecten=s.projecten; this.actief=s.actief;
+    if(!this.project()) this.actief=this.projecten[0] && this.projecten[0].id;
+  }
+};
+
+/* ---------- planner: logica per project ---------- */
+function duurVan(t){ return verschilDagen(t.einde,t.start)+1; }
+function loten(p){ const v=[],g=new Set();
+  for(const t of p.taken) if(!g.has(t.lot)){ g.add(t.lot); v.push(t.lot); }
+  return v; }
+function lotIndices(p,lot){ return p.taken.map((t,i)=>[t,i]).filter(([t])=>t.lot===lot).map(([,i])=>i); }
+function vindTaak(p,id){ const i=p.taken.findIndex(t=>t.id===id); if(i<0) throw new Error("Onbekende taak "+id); return i; }
+function taakVan(p,id){ return p.taken[vindTaak(p,id)]; }
+
+function bewaarKetting(p,lot){
+  const idx=lotIndices(p,lot);
+  idx.forEach((i,pos)=>{
+    const t=p.taken[i];
+    t._duur=duurVan(t);
+    t._buffer = pos===0 ? 0 : verschilDagen(t.start,p.taken[idx[pos-1]].einde)-1;
+  });
+}
+function cascadeVanaf(p,lot,posInLot){
+  const idx=lotIndices(p,lot);
+  for(let pos=posInLot+1; pos<idx.length; pos++){
+    const vorige=p.taken[idx[pos-1]], t=p.taken[idx[pos]];
+    t.start=plusDagen(vorige.einde,1+t._buffer);
+    t.einde=plusDagen(t.start,t._duur-1);
+  }
+}
+function zetDatums(p,id,nieuweStart,nieuwEinde){
+  if(verschilDagen(nieuwEinde,nieuweStart)<0) throw new Error("EindDatum ligt vóór StartDatum.");
+  const i=vindTaak(p,id), t=p.taken[i];
+  bewaarKetting(p,t.lot);
+  t.start=nieuweStart; t.einde=nieuwEinde;
+  cascadeVanaf(p,t.lot,lotIndices(p,t.lot).indexOf(i));
+}
+function zetStart(p,id,nieuweStart){ const t=taakVan(p,id), d=duurVan(t);
+  zetDatums(p,id,nieuweStart,plusDagen(nieuweStart,d-1)); }
+function zetEinde(p,id,nieuwEinde){ const t=taakVan(p,id);
+  zetDatums(p,id,t.start,nieuwEinde); }
+
+function nieuwTaakId(p){ const n=Math.max(0,...p.taken.map(t=>parseInt(t.id.slice(1),10)||0))+1;
+  return "T"+String(n).padStart(3,"0"); }
+function taakToevoegen(p,lot,naam){
+  const idx=lotIndices(p,lot), laatste=p.taken[idx[idx.length-1]];
+  const start=plusDagen(laatste.einde,1);
+  const nieuw={id:nieuwTaakId(p),lot,lot_omschrijving:laatste.lot_omschrijving,
+    taak:naam,fase:laatste.fase||"",wie:"",start,einde:plusDagen(start,13),
+    status:"Niet gestart",voortgang:0,prioriteit:"Medium",opmerking:""};
+  p.taken.splice(idx[idx.length-1]+1,0,nieuw);
+  return nieuw.id;
+}
+function lotToevoegen(p,lotNaam,omschrijving){
+  const start=volgendeMaandag();
+  const nieuw={id:nieuwTaakId(p),lot:lotNaam,lot_omschrijving:omschrijving||"",
+    taak:TAAKCATALOGUS["Ontwerp"][0],fase:"Ontwerp",wie:"",start,einde:plusDagen(start,13),
+    status:"Niet gestart",voortgang:0,prioriteit:"Medium",opmerking:""};
+  p.taken.push(nieuw);
+  return nieuw.id;
+}
+function verplaatsTaak(p,id,richting){   // richting: -1 = omhoog, +1 = omlaag (binnen het lot)
+  const i=vindTaak(p,id), lot=p.taken[i].lot;
+  const idx=lotIndices(p,lot), pos=idx.indexOf(i), npos=pos+richting;
+  if(npos<0||npos>=idx.length) return false;
+  bewaarKetting(p,lot);                       // duur + buffer van elke taak vastleggen
+  const anker=p.taken[idx[0]].start;          // startdatum van het lot blijft behouden
+  const a=idx[pos], b=idx[npos];
+  [p.taken[a],p.taken[b]]=[p.taken[b],p.taken[a]];
+  const idx2=lotIndices(p,lot);
+  const eerste=p.taken[idx2[0]];
+  eerste.start=anker;
+  eerste.einde=plusDagen(anker,eerste._duur-1);
+  cascadeVanaf(p,lot,0);                      // hele ketting herrekenen in de nieuwe volgorde
+  return true;
+}
+function taakKopieren(p,id){
+  const i=vindTaak(p,id), t=p.taken[i], lot=t.lot;
+  bewaarKetting(p,lot);                       // duur+buffer van de volgende taken vastleggen
+  const d=duurVan(t);
+  const kopie=Object.assign({},t,{
+    id:nieuwTaakId(p),
+    taak:t.taak+" (kopie)",
+    start:plusDagen(t.einde,1),
+    einde:plusDagen(t.einde,d)
+  });
+  delete kopie._duur; delete kopie._buffer;
+  p.taken.splice(i+1,0,kopie);
+  kopie._duur=d; kopie._buffer=0;             // kopie sluit direct aan op het origineel
+  const pos=lotIndices(p,lot).indexOf(i+1);
+  cascadeVanaf(p,lot,pos);                    // volgende taken schuiven automatisch door
+  return kopie.id;
+}
+function lotKopieren(p,lot,nieuweNaam){
+  const idx=lotIndices(p,lot);
+  const kopies=idx.map(i=>{
+    const k=Object.assign({},p.taken[i],{lot:nieuweNaam});
+    delete k._duur; delete k._buffer;
+    return k;
+  });
+  let n=Math.max(0,...p.taken.map(t=>parseInt(t.id.slice(1),10)||0));
+  kopies.forEach(k=>{ n+=1; k.id="T"+String(n).padStart(3,"0"); });
+  p.taken.splice(idx[idx.length-1]+1,0,...kopies);   // direct na het origineel
+  return nieuweNaam;
+}
+function hernoemLot(p,oudeNaam,nieuweNaam){
+  if(!nieuweNaam) throw new Error("Lotnaam mag niet leeg zijn.");
+  if(nieuweNaam!==oudeNaam&&loten(p).includes(nieuweNaam))
+    throw new Error("Er bestaat al een lot met deze naam in dit project.");
+  lotIndices(p,oudeNaam).forEach(i=>{ p.taken[i].lot=nieuweNaam; });
+}
+function zetLotOmschrijving(p,lot,tekst){
+  lotIndices(p,lot).forEach(i=>{ p.taken[i].lot_omschrijving=tekst; });
+}
+function hernummer(p){
+  // eerst ALLE blokken vastleggen, dan pas hernoemen (anders raken namen elkaar kwijt)
+  const blokken=loten(p).map(naam=>({naam,taken:lotIndices(p,naam).map(i=>p.taken[i])}));
+  let lotNr=0;
+  for(const b of blokken){
+    if(/^Lot \d+$/.test(b.naam)){
+      lotNr+=1;
+      const nieuweNaam="Lot "+lotNr;
+      b.taken.forEach(t=>t.lot=nieuweNaam);
+    }
+  }
+  // taakID's doorlopend hernummeren in de zichtbare volgorde
+  let n=0;
+  for(const t of p.taken){ n+=1; t.id="T"+String(n).padStart(3,"0"); }
+}
+function verplaatsLot(p,lot,richting){   // richting: -1 = omhoog, +1 = omlaag
+  const namen=loten(p);
+  const pos=namen.indexOf(lot), npos=pos+richting;
+  if(npos<0||npos>=namen.length) return false;
+  const blokken={};
+  for(const naam of namen) blokken[naam]=lotIndices(p,naam).map(i=>p.taken[i]);
+  const volgorde=[...namen];
+  [volgorde[pos],volgorde[npos]]=[volgorde[npos],volgorde[pos]];
+  p.taken=volgorde.flatMap(naam=>blokken[naam]);   // datums blijven staan: loten lopen parallel
+  hernummer(p);
+  return true;
+}
+function lotVerwijderen(p,lot){
+  p.taken=p.taken.filter(t=>t.lot!==lot);   // andere loten lopen parallel en blijven onaangeroerd
+}
+function taakVerwijderen(p,id){
+  const i=vindTaak(p,id), lot=p.taken[i].lot;
+  bewaarKetting(p,lot);
+  const pos=lotIndices(p,lot).indexOf(i);
+  p.taken.splice(i,1);
+  if(lotIndices(p,lot).length && pos>0) cascadeVanaf(p,lot,pos-1);
+}
+function samenvatting(){
+  const actieve=app.projecten.filter(p=>!p.gearchiveerd);
+  const archief=app.projecten.length-actieve.length;
+  const alle=actieve.flatMap(p=>p.taken);
+  if(!alle.length) return archief?`Alle projecten in archief (${archief})`:"Geen taken";
+  const volt=alle.filter(t=>t.status==="Voltooid").length;
+  const uitv=alle.filter(t=>t.status==="In uitvoering").length;
+  const gem=Math.round(alle.reduce((s,t)=>s+(+t.voortgang||0),0)/alle.length);
+  return `${actieve.length} project${actieve.length>1?"en":""}${archief?` (+${archief} archief)`:""} • ${alle.length} taken • ${volt} voltooid • ${uitv} in uitvoering • gem. voortgang ${gem}%`;
+}
+function lotStatus(p,lot){
+  const ts=lotIndices(p,lot).map(i=>p.taken[i]);
+  if(ts.some(t=>t.status==="Geblokkeerd")) return "Geblokkeerd";
+  if(ts.every(t=>t.status==="Voltooid")) return "Voltooid";
+  if(ts.some(t=>t.status==="In uitvoering"||t.status==="Voltooid")) return "In uitvoering";
+  return "Niet gestart";
+}
+
+/* ---------- opslag (met migratie vanaf de vorige versie) ---------- */
+/* ---------- automatische herstelpunten ---------- */
+const HERSTEL_SLEUTEL=OPSLAGSLEUTEL+"_herstelpunten";
+const HERSTEL_MAX=12;              // aantal bewaarde momentopnames
+const HERSTEL_INTERVAL=30*60*1000; // hoogstens één per half uur
+let herstelpunten=[];
+try{ const h=localStorage.getItem(HERSTEL_SLEUTEL); if(h) herstelpunten=JSON.parse(h)||[]; }catch(e){}
+let maakHerstelpunt=function(){};  // wordt hieronder ingevuld zodra de interface geladen is
+
+let opslagWerkt=true;
+function bewaar(){
+  if(!opslagWerkt) return;
+  try{
+    localStorage.setItem(OPSLAGSLEUTEL,app.serialiseer());
+    localStorage.setItem(OPSLAGSLEUTEL+"_undo",JSON.stringify(undoStapel));
+  }
+  catch(e){ opslagWerkt=false; toonOpslagmelding(); return; }
+  maakHerstelpunt();
+}
+function migreerFases(){
+  const kaart={I:"Ontwerp",B:"Bestek",P:"Publiceren",G:"Gunning",U:"Uitvoering"};
+  let gewijzigd=false;
+  for(const p of app.projecten){
+    for(const lot of loten(p)){
+      const idx=lotIndices(p,lot);
+      for(let k=idx.length-1;k>=0;k--){
+        const t=p.taken[idx[k]];
+        if(t.fase==="C"&&k>0){
+          const vorige=p.taken[idx[k-1]];
+          if(verschilDagen(t.einde,vorige.einde)>0) vorige.einde=t.einde;
+          if(t.opmerking) vorige.opmerking=(vorige.opmerking?vorige.opmerking+" • ":"")+t.opmerking;
+          p.taken.splice(idx[k],1);
+          gewijzigd=true;
+        }else if(kaart[t.fase]){
+          t.fase=kaart[t.fase]; gewijzigd=true;
+        }
+      }
+    }
+  }
+  return gewijzigd;
+}
+function laad(){
+  try{
+    const u=localStorage.getItem(OPSLAGSLEUTEL+"_undo");
+    if(u){ const lijst=JSON.parse(u); if(Array.isArray(lijst)) undoStapel.push(...lijst.slice(-25)); }
+  }catch(e){}
+  try{
+    const j=localStorage.getItem(OPSLAGSLEUTEL);
+    if(j){
+      app.laadUit(j);
+      if(migreerFases()) bewaar();
+      if(!localStorage.getItem(OPSLAGSLEUTEL+"_g21weg")){
+        if(app.projecten.some(p=>p.naam==="Gebouw 21")){
+          undoStapel.push(app.serialiseer());          // herstelbaar via Ongedaan maken
+          app.projecten=app.projecten.filter(p=>p.naam!=="Gebouw 21");
+          if(!app.projecten.length) app.voegProjectToe("Nieuw project");
+          if(!app.projecten.find(p=>p.id===app.actief)) app.actief=app.projecten[0].id;
+          bewaar();
+        }
+        localStorage.setItem(OPSLAGSLEUTEL+"_g21weg","1");
+      }
+      return;
+    }
+    const oud=localStorage.getItem(OUDE_SLEUTEL);      // gegevens uit de eerste versie overnemen
+    if(oud){
+      app.projecten=[{id:"P1",naam:"Gebouw 21",taken:JSON.parse(oud)}];
+      app.actief="P1"; bewaar(); return;
+    }
+  }catch(e){ opslagWerkt=false; }
+  // geen bewaarde gegevens: start met een leeg project (Gebouw 21 blijft beschikbaar als sjabloon)
+  app.projecten=[];
+  app.voegProjectToe("Nieuw project");
+  if(!opslagWerkt) toonOpslagmelding();
+}
+function toonExportherinnering(){
+  const balk=document.getElementById("exportherinnering");
+  if(!balk) return;
+  let laatste=0;
+  try{ laatste=parseInt(localStorage.getItem(OPSLAGSLEUTEL+"_export")||"0",10); }catch(e){}
+  const dagen=laatste?Math.floor((Date.now()-laatste)/86400000):null;
+  const veel=app.projecten.reduce((s,p)=>s+p.taken.length,0)>5;
+  if(!veel||(dagen!==null&&dagen<14)){ balk.style.display="none"; return; }
+  balk.innerHTML=(laatste
+    ? `Je laatste reservekopie is ${dagen} dagen oud.`
+    : "Je hebt nog geen reservekopie buiten de browser bewaard.")+
+    ' Kies <b>Gegevens ▾ → Bewaar reservekopie</b> om je planning veilig te stellen.';
+  balk.style.display="block";
+}
+function toonOpslagmelding(){
+  const el=document.getElementById("opslagmelding");
+  if(el) el.style.display="block";
+}
+
+/* ---------- ongedaan maken ---------- */
+const undoStapel=[];
+
+/* ====================================================================
+   INTERFACE — enkel uitgevoerd in de browser
+   ==================================================================== */
+if(typeof document!=="undefined"){
+
+let markeerId=null;
+let focusTaakId=null;
+const openLoten={};
+
+let meldingTimer=null;
+function melding(tekst){
+  const el=document.getElementById("melding");
+  el.textContent=tekst;
+  el.classList.add("zichtbaar");
+  clearTimeout(meldingTimer);
+  meldingTimer=setTimeout(()=>el.classList.remove("zichtbaar"),2600);
+}
+function bewaarFocus(){
+  const a=document.activeElement;
+  if(!a||!a.closest) return null;
+  const rij=a.closest("tr[data-taak]");
+  if(!rij) return null;
+  const cel=a.closest("td");
+  return {taak:rij.dataset.taak, kolom:[...rij.children].indexOf(cel),
+          sel:(a.selectionStart!=null)?[a.selectionStart,a.selectionEnd]:null};
+}
+function herstelFocus(f){
+  if(!f) return;
+  const rij=document.querySelector(`tr[data-taak="${f.taak}"]`);
+  if(!rij||!rij.children[f.kolom]) return;
+  const veld=rij.children[f.kolom].querySelector("input,select");
+  if(!veld) return;
+  try{
+    veld.focus({preventScroll:true});
+    if(f.sel&&veld.setSelectionRange) veld.setSelectionRange(f.sel[0],f.sel[1]);
+  }catch(e){}
+}
+function ververs(){
+  const focus=bewaarFocus();
+  vulProjectkeuze(); vulSjabloonlijst(); vulArchiefbanner(); vulKpis(); tekenLijst(); tekenGantt(); tekenTotaal();
+  herstelFocus(focus);
+  const ap=app.project();
+  document.getElementById("knopArchiveerProject").textContent=
+    ap&&ap.gearchiveerd ? "Haal uit archief" : "Archiveer project…";
+  const k=document.getElementById("knopOngedaan");
+  k.disabled=!undoStapel.some(s=>s!==app.serialiseer());
+  k.title=k.disabled?"Er zijn nog geen wijzigingen om ongedaan te maken":"Laatste wijziging terugdraaien";
+}
+const IK={
+  taken:'<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="3.4" rx="1.2" fill="#0D7BBF"/><rect x="3" y="10.3" width="13" height="3.4" rx="1.2" fill="#0D7BBF" opacity=".55"/><rect x="3" y="16.6" width="16" height="3.4" rx="1.2" fill="#0D7BBF" opacity=".3"/></svg>',
+  vinkje:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5.2 5L20 6.5" stroke="#559020" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  pijl:'<svg viewBox="0 0 24 24" fill="none"><path d="M7 5l11 7-11 7z" fill="#0D7BBF"/></svg>',
+  klok:'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="#B45309" stroke-width="2.4"/><path d="M12 7.5V12l3.2 2.4" stroke="#B45309" stroke-width="2.4" stroke-linecap="round"/></svg>'
+};
+function kpi(tegelKlas,icoon,kop,waarde,waardeKlas,omschrijving,balk){
+  return `<div class="cv-kaart"><span class="tegel ${tegelKlas}">${icoon}</span>
+    <div style="flex:1;min-width:0"><div class="kop">${kop}</div>
+    <div class="waarde ${waardeKlas||""}">${waarde}</div>
+    <div class="omschrijving">${omschrijving}</div>${balk||""}</div></div>`;
+}
+function vulKpis(){
+  const el=document.getElementById("kpistrook");
+  const p=app.project();
+  if(!p||!p.taken.length){ el.innerHTML=""; return; }
+  const n=p.taken.length;
+  const volt=p.taken.filter(t=>t.status==="Voltooid").length;
+  const uitv=p.taken.filter(t=>t.status==="In uitvoering").length;
+  const blok=p.taken.filter(t=>t.status==="Geblokkeerd").length;
+  const gem=Math.round(p.taken.reduce((s,t)=>s+(+t.voortgang||0),0)/n);
+  const start=p.taken.reduce((a,t)=>t.start<a?t.start:a,p.taken[0].start);
+  const einde=p.taken.reduce((a,t)=>t.einde>a?t.einde:a,p.taken[0].einde);
+  const dagen=verschilDagen(einde,start)+1;
+  el.innerHTML=
+    kpi("",IK.taken,"Taken",n,"",loten(p).length+" loten"+(blok?` • <b style="color:var(--cv-error)">${blok} geblokkeerd</b>`:""))+
+    kpi("groen",IK.vinkje,"Voltooid",volt,"groen","van "+n+" taken")+
+    kpi("",IK.pijl,"In uitvoering",uitv,"","actieve taken")+
+    kpi("",IK.taken,"Voortgang",gem+"%","","gemiddeld over "+p.naam,
+        `<div class="voortgangsbalk"><i style="width:${gem}%"></i></div>`)+
+    kpi("amber",IK.klok,"Doorlooptijd",dagen+" d","",toonDatum(start)+" → "+toonDatum(einde));
+}
+function wijzig(fn){
+  const voor=app.serialiseer();
+  try{ fn(); }catch(e){ alert(e.message); }
+  if(app.serialiseer()!==voor){                    // enkel bij een echte wijziging
+    undoStapel.push(voor);
+    if(undoStapel.length>25) undoStapel.shift();
+    bewaar();
+  }
+  ververs();
+}
+
+/* ---------- projectkeuze ---------- */
+function vulProjectkeuze(){
+  const sel=document.getElementById("projectkeuze");
+  sel.innerHTML="";
+  const opNaam=(a,b)=>a.naam.localeCompare(b.naam,"nl",{sensitivity:"base",numeric:true});
+  const actieve=app.projecten.filter(p=>!p.gearchiveerd).sort(opNaam);
+  const archief=app.projecten.filter(p=>p.gearchiveerd).sort(opNaam);
+  const maakOptie=(p,doel)=>{
+    const o=document.createElement("option");
+    o.value=p.id; o.textContent=p.naam;
+    if(p.id===app.actief) o.selected=true;
+    doel.appendChild(o);
+  };
+  actieve.forEach(p=>maakOptie(p,sel));
+  if(archief.length){
+    const groep=document.createElement("optgroup");
+    groep.label="Archief";
+    archief.forEach(p=>maakOptie(p,groep));
+    sel.appendChild(groep);
+  }
+}
+document.getElementById("projectkeuze").addEventListener("change",e=>{
+  app.actief=e.target.value; bewaar(); ververs();
+});
+document.getElementById("knopNieuwProject").onclick=()=>{
+  const naam=prompt("Naam van het nieuwe project:");
+  if(naam&&naam.trim()) wijzig(()=>app.voegProjectToe(naam.trim()));
+};
+document.getElementById("knopHernoemProject").onclick=()=>{
+  const p=app.project();
+  const naam=prompt("Nieuwe naam voor dit project:",p.naam);
+  if(naam&&naam.trim()) wijzig(()=>{ p.naam=naam.trim(); });
+};
+document.getElementById("knopArchiveerProject").onclick=()=>{
+  const p=app.project();
+  if(!p.gearchiveerd){
+    if(!confirm(`Project "${p.naam}" archiveren?\nHet blijft bewaard en raadpleegbaar, maar telt niet meer mee in de Totaalplanning.`)) return;
+    wijzig(()=>{ p.gearchiveerd=true; });
+    melding(`Project "${p.naam}" gearchiveerd.`);
+  }else{
+    wijzig(()=>{ p.gearchiveerd=false; });
+    melding(`Project "${p.naam}" teruggehaald uit het archief.`);
+  }
+};
+function vulArchiefbanner(){
+  const el=document.getElementById("archiefbanner");
+  const p=app.project();
+  if(!p||!p.gearchiveerd){ el.innerHTML=""; return; }
+  el.innerHTML=`<span><b>Dit project is gearchiveerd.</b>
+    Het blijft volledig raadpleegbaar en bewerkbaar, maar telt niet mee in de Totaalplanning en de samenvatting.</span>`;
+  const knop=document.createElement("button");
+  knop.textContent="Haal uit archief";
+  knop.onclick=()=>{ wijzig(()=>{ p.gearchiveerd=false; }); melding(`Project "${p.naam}" teruggehaald uit het archief.`); };
+  el.appendChild(knop);
+}
+function vulSjabloonlijst(){
+  const lijst=document.getElementById("sjabloonlijst");
+  lijst.innerHTML="";
+  for(const s of alleSjablonen()){
+    const rij=document.createElement("div");
+    rij.className="sjabloonrij";
+    const knop=document.createElement("button");
+    const nLoten=new Set(s.taken.map(t=>t.lot)).size;
+    knop.innerHTML=`${s.naam}<small>${nLoten} loten • ${s.taken.length} taken</small>`;
+    knop.onclick=()=>{
+      const naam=prompt(`Naam voor het nieuwe project (sjabloon: ${s.naam}):`,s.naam);
+      if(!naam||!naam.trim()) return;
+      wijzig(()=>projectUitSjabloon(s,naam.trim()));
+      melding(`Project "${naam.trim()}" aangemaakt uit sjabloon "${s.naam}" — planning start volgende maandag.`);
+    };
+    rij.appendChild(knop);
+    const weg=document.createElement("button");
+    weg.className="weg"; weg.textContent="✕";
+    weg.title="Sjabloon verwijderen";
+    weg.onclick=e=>{
+      e.stopPropagation();
+      if(!confirm(`Sjabloon "${s.naam}" verwijderen?`)) return;
+      if(s.ingebouwd){
+        verborgenSjablonen.push(s.naam);
+      }else{
+        eigenSjablonen=eigenSjablonen.filter(x=>x.naam!==s.naam);
+      }
+      bewaarSjablonen(); vulSjabloonlijst();
+      melding(`Sjabloon "${s.naam}" verwijderd.`);
+    };
+    rij.appendChild(weg);
+    lijst.appendChild(rij);
+  }
+  if(!alleSjablonen().length){
+    const leeg=document.createElement("div");
+    leeg.className="menukopje"; leeg.textContent="(geen sjablonen)";
+    lijst.appendChild(leeg);
+  }
+}
+document.getElementById("knopBewaarSjabloon").onclick=()=>{
+  const p=app.project();
+  if(!p||!p.taken.length){ melding("Dit project bevat geen taken."); return; }
+  let naam=prompt("Naam voor het sjabloon:",p.naam);
+  if(!naam||!naam.trim()) return;
+  naam=naam.trim();
+  if(naam==="Gebouw 21"||naam==="Project+AR+BA"){ alert("Deze naam is voorbehouden voor een ingebouwd sjabloon."); return; }
+  const bestaand=eigenSjablonen.find(s=>s.naam===naam);
+  if(bestaand&&!confirm(`Er bestaat al een sjabloon "${naam}". Vervangen?`)) return;
+  const inhoud={naam,taken:JSON.parse(app.serialiseer()).projecten.find(x=>x.id===p.id).taken};
+  if(bestaand) Object.assign(bestaand,inhoud); else eigenSjablonen.push(inhoud);
+  bewaarSjablonen(); vulSjabloonlijst();
+  melding(`Project bewaard als sjabloon "${naam}".`);
+};
+document.getElementById("knopVerwijderProject").onclick=()=>{
+  const p=app.project();
+  if(confirm(`Project "${p.naam}" met ${p.taken.length} taken volledig verwijderen?`))
+    wijzig(()=>app.verwijderProject(p.id));
+};
+document.getElementById("knopNieuwLot").onclick=()=>{
+  const p=app.project();
+  const lotNaam=prompt("Naam van het nieuwe lot (bv. Lot 11):");
+  if(!lotNaam||!lotNaam.trim()) return;
+  if(loten(p).includes(lotNaam.trim())){ alert("Dit lot bestaat al in dit project."); return; }
+  const omschrijving=prompt("Omschrijving van het lot (mag leeg blijven):")||"";
+  wijzig(()=>{ markeerId=lotToevoegen(p,lotNaam.trim(),omschrijving.trim()); });
+};
+
+/* ---------- takenlijst ---------- */
+function tekenLijst(){
+  const p=app.project();
+  const wortel=document.getElementById("lijstinhoud");
+  wortel.innerHTML="";
+  if(!p){ return; }
+  for(const lot of loten(p)){
+    const idx=lotIndices(p,lot);
+    const eerste=p.taken[idx[0]], laatste=p.taken[idx[idx.length-1]];
+    const sleutel=p.id+"::"+lot;
+    const blok=document.createElement("div");
+    blok.className="lotblok"+(openLoten[sleutel]===false?" dicht":"");
+
+    const kop=document.createElement("div");
+    kop.className="lotkop";
+    const lotGem=Math.round(idx.reduce((s,i2)=>s+(+p.taken[i2].voortgang||0),0)/idx.length);
+    kop.innerHTML=`<span class="pijl">▼</span>`;
+    const naamVeld=document.createElement("input");
+    naamVeld.type="text"; naamVeld.className="lotnaam"; naamVeld.value=lot;
+    naamVeld.title="Klik om de lotnaam/het lotnummer te wijzigen";
+    naamVeld.onclick=e=>e.stopPropagation();
+    naamVeld.addEventListener("change",()=>{
+      const nieuw2=naamVeld.value.trim();
+      if(nieuw2===lot){ naamVeld.value=lot; return; }
+      try{
+        wijzig(()=>{ hernoemLot(p,lot,nieuw2); openLoten[p.id+"::"+nieuw2]=openLoten[p.id+"::"+lot]; });
+        melding(`Lot hernoemd naar "${nieuw2}".`);
+      }catch(e){ naamVeld.value=lot; }
+    });
+    kop.appendChild(naamVeld);
+    const omschrVeld=document.createElement("input");
+    omschrVeld.type="text"; omschrVeld.className="lotomschrijving";
+    omschrVeld.value=eerste.lot_omschrijving||"";
+    omschrVeld.placeholder="omschrijving…";
+    omschrVeld.title="Klik om de lotomschrijving te wijzigen";
+    omschrVeld.onclick=e=>e.stopPropagation();
+    omschrVeld.addEventListener("change",()=>wijzig(()=>zetLotOmschrijving(p,lot,omschrVeld.value.trim())));
+    kop.appendChild(omschrVeld);
+    const rest=document.createElement("span");
+    rest.style.display="contents";
+    rest.innerHTML=`<span class="lotvoortgang"><span class="voortgangsbalk"><i style="width:${lotGem}%"></i></span><small>${lotGem}%</small></span>
+      <span class="lotinfo">${idx.length} taken • ${toonDatum(eerste.start)} → ${toonDatum(laatste.einde)}</span>`;
+    kop.appendChild(rest);
+    const lotknop=(tekst,titel,klas,actie,uit)=>{
+      const b=document.createElement("button");
+      b.className="knop klein"+(klas?" "+klas:""); b.textContent=tekst; b.title=titel;
+      b.disabled=!!uit;
+      b.onclick=(e)=>{ e.stopPropagation(); actie(); };
+      kop.appendChild(b);
+    };
+    const lotVolgorde=loten(p);
+    const lotPos=lotVolgorde.indexOf(lot);
+    lotknop("▲","Lot omhoog verschuiven (nummering past zich aan)","",()=>{
+      wijzig(()=>verplaatsLot(p,lot,-1));
+      melding("Lot omhoog verschoven — nummering aangepast.");
+    },lotPos===0);
+    lotknop("▼","Lot omlaag verschuiven (nummering past zich aan)","",()=>{
+      wijzig(()=>verplaatsLot(p,lot,1));
+      melding("Lot omlaag verschoven — nummering aangepast.");
+    },lotPos===lotVolgorde.length-1);
+    lotknop("+ Taak toevoegen","Nieuwe taak onderaan dit lot","",()=>{
+      wijzig(()=>{ markeerId=taakToevoegen(p,lot,"Nieuwe taak"); focusTaakId=markeerId; });
+    });
+    lotknop("⧉ Kopieer lot","Dit lot met alle taken kopiëren","",()=>{
+      let naam=prompt("Naam voor het gekopieerde lot:",lot+" (kopie)");
+      if(!naam||!naam.trim()) return;
+      naam=naam.trim();
+      if(loten(p).includes(naam)){ alert("Er bestaat al een lot met deze naam."); return; }
+      wijzig(()=>lotKopieren(p,lot,naam));
+      melding(`${lot} gekopieerd naar "${naam}" (${idx.length} taken).`);
+    });
+    lotknop("✕ Verwijder lot","Dit lot met alle taken verwijderen","lotweg",()=>{
+      if(!confirm(`${lot} — ${eerste.lot_omschrijving||""}\n\nDit lot met ${idx.length} ta${idx.length===1?"ak":"ken"} volledig verwijderen?\nAndere loten en hun planning blijven onaangeroerd.`)) return;
+      wijzig(()=>lotVerwijderen(p,lot));
+      melding(`${lot} verwijderd (${idx.length} taken).`);
+    });
+    kop.onclick=()=>{ openLoten[sleutel]=blok.classList.contains("dicht"); blok.classList.toggle("dicht"); };
+    blok.appendChild(kop);
+
+    const tabel=document.createElement("table");
+    tabel.innerHTML=`<thead><tr>
+      <th>TaakID</th><th>Fase</th><th style="min-width:230px">Taak</th><th style="min-width:120px">Wie</th>
+      <th>StartDatum</th><th>EindDatum</th><th>Duur</th>
+      <th>Status</th><th>Voortgang</th><th>Prioriteit</th>
+      <th style="min-width:150px">Opmerking</th><th style="text-align:center">Acties</th></tr></thead>`;
+    const romp=document.createElement("tbody");
+
+    for(const i of idx){
+      const t=p.taken[i];
+      const rij=document.createElement("tr");
+      rij.dataset.taak=t.id;
+      if(t.id===markeerId) rij.className="markeer";
+      const d=duurVan(t);
+      const duurTxt=d+" d";
+
+      rij.appendChild(cel(`<span class="id">${t.id}</span>`));
+      const faseOpties=[""].concat(FASEN);
+      if(t.fase&&!faseOpties.includes(t.fase)) faseOpties.push(t.fase);
+      rij.appendChild(keuzeCel(faseOpties,t.fase,w=>{ t.fase=w; }));
+      const taakCel=invoerCel("text",t.taak,w=>{ if(w.trim()) t.taak=w.trim(); });
+      const taakInp=taakCel.querySelector("input");
+      taakInp.placeholder="Kies of typ een taak…";
+      taakInp.autocomplete="off";
+      taakInp.addEventListener("focus",()=>{ taakInp.dataset.getypt="0"; toonSuggesties(taakInp,t.fase); });
+      taakInp.addEventListener("input",()=>{ taakInp.dataset.getypt="1"; toonSuggesties(taakInp,t.fase); });
+      taakInp.addEventListener("blur",()=>setTimeout(()=>{
+        if(!suggestiePaneel.contains(document.activeElement)) verbergSuggesties();
+      },120));
+      taakInp.addEventListener("keydown",e=>{ if(e.key==="Escape") verbergSuggesties(); });
+      rij.appendChild(taakCel);
+      const wieCel=invoerCel("text",t.wie||"",w=>{ t.wie=w.trim(); });
+      wieCel.querySelector("input").placeholder="wie…";
+      rij.appendChild(wieCel);
+      rij.appendChild(invoerCel("date",t.start,w=>{ if(w) zetStart(p,t.id,w); }));
+      rij.appendChild(invoerCel("date",t.einde,w=>{ if(w) zetEinde(p,t.id,w); }));
+      rij.appendChild(cel(duurTxt,"duur"));
+      rij.appendChild(keuzeCel(STATUSSEN,t.status,w=>{ t.status=w; },"st-"+t.status.replace(/ /g,"")));
+      rij.appendChild(invoerCel("number",t.voortgang,w=>{ t.voortgang=Math.max(0,Math.min(100,parseInt(w||"0",10))); },"width:64px"));
+      rij.appendChild(keuzeCel(PRIORITEITEN,t.prioriteit,w=>{ t.prioriteit=w; }));
+      rij.appendChild(invoerCel("text",t.opmerking,w=>{ t.opmerking=w.trim(); }));
+
+      const acties=document.createElement("td");
+      acties.style.whiteSpace="nowrap";
+      const pos=idx.indexOf(i);
+      const omhoog=document.createElement("button");
+      omhoog.className="verplaats"; omhoog.title="Taak omhoog verschuiven binnen het lot"; omhoog.textContent="▲";
+      omhoog.disabled=pos===0;
+      omhoog.onclick=()=>wijzig(()=>{ verplaatsTaak(p,t.id,-1); markeerId=t.id; });
+      const omlaag=document.createElement("button");
+      omlaag.className="verplaats"; omlaag.title="Taak omlaag verschuiven binnen het lot"; omlaag.textContent="▼";
+      omlaag.disabled=pos===idx.length-1;
+      omlaag.onclick=()=>wijzig(()=>{ verplaatsTaak(p,t.id,1); markeerId=t.id; });
+      acties.appendChild(omhoog); acties.appendChild(omlaag);
+      const kopieer=document.createElement("button");
+      kopieer.className="verplaats"; kopieer.title="Taak kopiëren (kopie komt er direct achter, de rest schuift door)"; kopieer.textContent="⧉";
+      kopieer.onclick=()=>wijzig(()=>{ markeerId=taakKopieren(p,t.id); melding(`Taak ${t.id} gekopieerd.`); });
+      acties.appendChild(kopieer);
+      const weg=document.createElement("button");
+      weg.className="verwijder"; weg.title="Taak verwijderen (de rest van het lot schuift aan)"; weg.textContent="✕";
+      weg.onclick=()=>{ if(confirm(`Taak ${t.id} "${t.taak}" verwijderen?\nDe volgende taken van dit lot schuiven automatisch aan.`))
+        wijzig(()=>taakVerwijderen(p,t.id)); };
+      acties.appendChild(weg);
+      rij.appendChild(acties);
+      romp.appendChild(rij);
+    }
+    tabel.appendChild(romp);
+    blok.appendChild(tabel);
+    wortel.appendChild(blok);
+  }
+  if(markeerId){
+    const rij=wortel.querySelector(`tr[data-taak="${markeerId}"]`);
+    if(rij&&rij.scrollIntoView){ try{ rij.scrollIntoView({block:"center",behavior:"smooth"}); }catch(e){} }
+    if(focusTaakId===markeerId&&rij){
+      const veld=rij.children[2].querySelector("input");
+      if(veld){ veld.focus(); veld.select(); }
+    }
+    markeerId=null; focusTaakId=null;
+  }
+}
+function cel(html,klas){ const td=document.createElement("td"); if(klas) td.className=klas; td.innerHTML=html; return td; }
+function invoerCel(type,waarde,bijWijziging,stijl){
+  const td=document.createElement("td");
+  const inp=document.createElement("input");
+  inp.type=type; inp.value=waarde; if(stijl) inp.style.cssText=stijl;
+  inp.addEventListener("change",()=>wijzig(()=>bijWijziging(inp.value)));
+  td.appendChild(inp); return td;
+}
+function keuzeCel(opties,waarde,bijWijziging,klas){
+  const td=document.createElement("td");
+  const sel=document.createElement("select"); if(klas) sel.className=klas;
+  for(const o of opties){ const op=document.createElement("option"); op.value=op.textContent=o;
+    if(o===waarde) op.selected=true; sel.appendChild(op); }
+  sel.addEventListener("change",()=>wijzig(()=>bijWijziging(sel.value)));
+  td.appendChild(sel); return td;
+}
+
+/* ---------- gantt (gedeelde bouwstenen) ---------- */
+const KLEUR={"Voltooid":"var(--voltooid)","In uitvoering":"var(--uitvoering)",
+             "Niet gestart":"var(--gepland)","Geblokkeerd":"var(--geblokkeerd)"};
+const WB=38, RIJH="30px";
+
+function weekbereik(taken){
+  const w0=maandagVan(naarDatum(taken.reduce((a,t)=>t.start<a?t.start:a,taken[0].start)));
+  const wEind=maandagVan(naarDatum(taken.reduce((a,t)=>t.einde>a?t.einde:a,taken[0].einde)));
+  wEind.setDate(wEind.getDate()+28);
+  const weken=[];
+  for(let w=new Date(w0); w<=wEind; w.setDate(w.getDate()+7)) weken.push(new Date(w));
+  return {w0,weken};
+}
+function kopregel(grid,weken,nuMa,hoektekst){
+  const hoek=document.createElement("div");
+  hoek.className="gcel gkop hoek"; hoek.textContent=hoektekst;
+  grid.appendChild(hoek);
+  weken.forEach(w=>{
+    const c=document.createElement("div");
+    c.className="gcel gkop"+(w.getTime()===nuMa?" nu":"");
+    c.innerHTML=`W${isoWeek(w)}<small>${String(w.getDate()).padStart(2,"0")}/${String(w.getMonth()+1).padStart(2,"0")}</small>`;
+    grid.appendChild(c);
+  });
+}
+function bandrij(grid,weken,nuMa,tekst,klas){
+  const label=document.createElement("div");
+  label.className="gcel glabel "+klas;
+  label.textContent=tekst;
+  grid.appendChild(label);
+  weken.forEach(w=>{ const c=document.createElement("div");
+    c.className="gcel "+klas+(w.getTime()===nuMa?" nu":""); grid.appendChild(c); });
+}
+function balkrij(grid,weken,nuMa,w0,labelTekst,start,einde,statusKleur,voortgang,titel,bijKlik){
+  const label=document.createElement("div");
+  label.className="gcel glabel";
+  label.textContent=labelTekst; label.title=labelTekst;
+  grid.appendChild(label);
+  const beginOffset=(naarDatum(start)-w0)/86400000;
+  const eindOffset=(naarDatum(einde)-w0)/86400000+1;
+  const px0=beginOffset/7*WB, px1=eindOffset/7*WB;
+  weken.forEach((w,k)=>{
+    const c=document.createElement("div");
+    c.className="gcel"+(w.getTime()===nuMa?" nu":"");
+    c.style.height=RIJH;
+    if(k===0){
+      const b=document.createElement("div");
+      b.className="gbalk";
+      b.style.left=px0+"px";
+      b.style.width=Math.max(px1-px0,6)+"px";
+      b.style.background=statusKleur;
+      b.title=titel;
+      if(voortgang>0&&voortgang<100){
+        const vg=document.createElement("div");
+        vg.className="vg"; vg.style.width=voortgang+"%";
+        b.appendChild(vg);
+      }
+      b.onclick=bijKlik;
+      c.style.overflow="visible";
+      c.appendChild(b);
+    }
+    grid.appendChild(c);
+  });
+}
+
+/* ---------- gantt actief project ---------- */
+function bewaarGanttScroll(grid){
+  const sc=grid.parentElement;
+  return {sc, links:sc.scrollLeft, top:sc.scrollTop, eerste:!sc.dataset.init};
+}
+function herstelGanttScroll(st,weken,nuMa){
+  if(!st) return;
+  const sc=st.sc;
+  if(st.eerste){
+    sc.dataset.init="1";
+    const idx=weken.findIndex(w=>w.getTime()===nuMa);
+    if(idx>0) sc.scrollLeft=Math.max(0,330+idx*WB-(sc.clientWidth||900)/2);
+  }else{
+    sc.scrollLeft=st.links; sc.scrollTop=st.top;
+  }
+}
+function tekenGantt(){
+  const p=app.project();
+  const grid=document.getElementById("ganttgrid");
+  const scrollStand=bewaarGanttScroll(grid);
+  grid.innerHTML="";
+  if(!p||!p.taken.length) return;
+  const {w0,weken}=weekbereik(p.taken);
+  const nuMa=maandagVan(new Date()).getTime();
+  grid.style.gridTemplateColumns=`330px repeat(${weken.length},${WB}px)`;
+  kopregel(grid,weken,nuMa,p.naam);
+  for(const lot of loten(p)){
+    const idx=lotIndices(p,lot);
+    bandrij(grid,weken,nuMa,`${lot} — ${p.taken[idx[0]].lot_omschrijving||""}`,"glotband");
+    for(const i of idx){
+      const t=p.taken[i];
+      balkrij(grid,weken,nuMa,w0,`${t.id}  ${t.taak}`,t.start,t.einde,
+        KLEUR[t.status]||KLEUR["Niet gestart"],
+        t.status==="Voltooid"?0:t.voortgang,
+        `${t.id} ${t.taak}${t.wie?"\nWie: "+t.wie:""}\n${toonDatum(t.start)} → ${toonDatum(t.einde)} • ${t.status} • ${t.voortgang}%`,
+        ()=>{ markeerId=t.id; openLoten[p.id+"::"+t.lot]=true; toonPaneel("lijst"); ververs(); });
+    }
+  }
+  herstelGanttScroll(scrollStand,weken,nuMa);
+}
+
+/* ---------- totaalplanning over alle projecten ---------- */
+function tekenTotaal(){
+  const grid=document.getElementById("totaalgrid");
+  const scrollStand=bewaarGanttScroll(grid);
+  grid.innerHTML="";
+  const zichtbaar=app.projecten.filter(p=>!p.gearchiveerd);
+  const alle=zichtbaar.flatMap(p=>p.taken);
+  if(!alle.length) return;
+  const {w0,weken}=weekbereik(alle);
+  const nuMa=maandagVan(new Date()).getTime();
+  grid.style.gridTemplateColumns=`330px repeat(${weken.length},${WB}px)`;
+  kopregel(grid,weken,nuMa,"Project / Lot");
+  for(const p of zichtbaar){
+    bandrij(grid,weken,nuMa,p.naam,"gprojband");
+    for(const lot of loten(p)){
+      const idx=lotIndices(p,lot);
+      const ts=idx.map(i=>p.taken[i]);
+      const start=ts.reduce((a,t)=>t.start<a?t.start:a,ts[0].start);
+      const einde=ts.reduce((a,t)=>t.einde>a?t.einde:a,ts[0].einde);
+      const st=lotStatus(p,lot);
+      const gem=Math.round(ts.reduce((s,t)=>s+(+t.voortgang||0),0)/ts.length);
+      balkrij(grid,weken,nuMa,w0,
+        `${lot} — ${ts[0].lot_omschrijving||""}`,start,einde,
+        KLEUR[st],st==="Voltooid"?0:gem,
+        `${p.naam} • ${lot}\n${toonDatum(start)} → ${toonDatum(einde)} • ${st} • gem. ${gem}%`,
+        ()=>{ app.actief=p.id; bewaar(); toonPaneel("lijst"); ververs(); });
+    }
+  }
+  herstelGanttScroll(scrollStand,weken,nuMa);
+}
+
+/* ---------- tabbladen ---------- */
+function toonPaneel(naam){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("actief",t.dataset.paneel===naam));
+  document.querySelectorAll(".paneel").forEach(pn=>pn.classList.toggle("actief",pn.id==="paneel-"+naam));
+}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>toonPaneel(t.dataset.paneel));
+
+/* ---------- werkbalk ---------- */
+document.getElementById("knopOngedaan").onclick=()=>{
+  const huidig=app.serialiseer();
+  let vorige=null;
+  while(undoStapel.length){
+    const s=undoStapel.pop();
+    if(s!==huidig){ vorige=s; break; }
+  }
+  if(vorige===null){ melding("Er is niets om ongedaan te maken."); ververs(); return; }
+  app.laadUit(vorige); bewaar(); ververs();
+  melding("Laatste wijziging ongedaan gemaakt.");
+};
+/* ---------- herstelpunten: volledige toestand ---------- */
+function volledigeToestand(){
+  const s=JSON.parse(app.serialiseer());
+  s.catalogus=eigenCatalogus;
+  s.sjablonen=eigenSjablonen;
+  s.verborgen=verborgenSjablonen;
+  return s;
+}
+function zetToestandTerug(data){
+  app.laadUit(JSON.stringify({actief:data.actief,projecten:data.projecten}));
+  if(data.catalogus&&typeof data.catalogus==="object") eigenCatalogus=data.catalogus;
+  if(Array.isArray(data.sjablonen)) eigenSjablonen=data.sjablonen;
+  if(Array.isArray(data.verborgen)) verborgenSjablonen=data.verborgen;
+  bewaarCatalogus(); bewaarSjablonen();
+}
+maakHerstelpunt=function(){
+  try{
+    if(!opslagWerkt) return;
+    const nu=Date.now();
+    const laatste=herstelpunten[herstelpunten.length-1];
+    if(laatste&&nu-laatste.tijd<HERSTEL_INTERVAL) return;   // niet vaker dan het interval
+    const punt={tijd:nu,data:volledigeToestand()};
+    if(laatste&&JSON.stringify(laatste.data)===JSON.stringify(punt.data)) return;
+    herstelpunten.push(punt);
+    // ouderdomsspreiding: de recentste zes behouden, daarvoor één per dag
+    if(herstelpunten.length>HERSTEL_MAX){
+      const recent=herstelpunten.slice(-6);
+      const perDag={};
+      for(const p of herstelpunten.slice(0,-6)) perDag[new Date(p.tijd).toDateString()]=p;
+      herstelpunten=Object.values(perDag).concat(recent).slice(-HERSTEL_MAX);
+    }
+    try{ localStorage.setItem(HERSTEL_SLEUTEL,JSON.stringify(herstelpunten)); }
+    catch(e){                                   // opslag vol: enkel de recentste bewaren
+      herstelpunten=herstelpunten.slice(-4);
+      try{ localStorage.setItem(HERSTEL_SLEUTEL,JSON.stringify(herstelpunten)); }catch(e2){}
+    }
+  }catch(e){ /* herstelpunten zijn extra: nooit het opslaan blokkeren */ }
+};
+
+/* ---------- herstelpuntenvenster ---------- */
+function toonWanneer(tijd){
+  const d=new Date(tijd), nu=new Date();
+  const tijdstip=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  const zelfdeDag=d.toDateString()===nu.toDateString();
+  const gisteren=new Date(nu); gisteren.setDate(nu.getDate()-1);
+  if(zelfdeDag) return "Vandaag "+tijdstip;
+  if(d.toDateString()===gisteren.toDateString()) return "Gisteren "+tijdstip;
+  return String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear()+" "+tijdstip;
+}
+function vulHerstelpunten(){
+  const lijst=document.getElementById("herstelpuntenlijst");
+  lijst.innerHTML="";
+  const gesorteerd=[...herstelpunten].sort((a,b)=>b.tijd-a.tijd);
+  if(!gesorteerd.length){
+    lijst.innerHTML='<div class="leeg">Nog geen herstelpunten — ze worden vanzelf aangemaakt terwijl je werkt.</div>';
+    return;
+  }
+  gesorteerd.forEach((punt,i)=>{
+    const projecten=(punt.data.projecten||[]);
+    const taken=projecten.reduce((s,p)=>s+(p.taken?p.taken.length:0),0);
+    const rij=document.createElement("div");
+    rij.className="herstelrij"+(i===0?" nu":"");
+    rij.innerHTML=`<div><div class="wanneer">${toonWanneer(punt.tijd)}</div>
+      <div class="inhoud">${projecten.length} project${projecten.length===1?"":"en"} • ${taken} taken</div></div>`;
+    const knop=document.createElement("button");
+    knop.className="knop"; knop.textContent="Terugzetten";
+    knop.onclick=()=>{
+      if(!confirm(`Planning terugzetten naar ${toonWanneer(punt.tijd)}?\nJe huidige toestand blijft herstelbaar via Ongedaan maken.`)) return;
+      undoStapel.push(app.serialiseer());
+      if(undoStapel.length>25) undoStapel.shift();
+      zetToestandTerug(punt.data);
+      bewaar(); ververs();
+      document.getElementById("herstelvenster").classList.remove("open");
+      melding(`Teruggezet naar ${toonWanneer(punt.tijd)}.`);
+    };
+    rij.appendChild(knop);
+    lijst.appendChild(rij);
+  });
+}
+document.getElementById("knopHerstelpunten").onclick=()=>{
+  vulHerstelpunten();
+  document.getElementById("herstelvenster").classList.add("open");
+};
+document.getElementById("knopSluitHerstel").onclick=()=>
+  document.getElementById("herstelvenster").classList.remove("open");
+document.getElementById("herstelvenster").onclick=e=>{
+  if(e.target.id==="herstelvenster") e.target.classList.remove("open");
+};
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape") document.getElementById("herstelvenster").classList.remove("open");
+});
+
+document.getElementById("knopExportJson").onclick=()=>{
+  const uit=volledigeToestand();
+  uit.bewaardOp=new Date().toISOString();
+  uit.versie="project-planning-1";
+  downloadTekst(JSON.stringify(uit),"projectplanning_reservekopie_"+naarIso(new Date())+".json","application/json");
+  try{ localStorage.setItem(OPSLAGSLEUTEL+"_export",String(Date.now())); }catch(e){}
+  melding("Reservekopie bewaard — zet ze op een schijf of netwerkmap.");
+  toonExportherinnering();
+};
+document.getElementById("knopImportJson").onclick=()=>document.getElementById("importBestand").click();
+document.getElementById("importBestand").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const lezer=new FileReader();
+  lezer.onload=()=>{ try{
+      const data=JSON.parse(lezer.result);
+      undoStapel.push(app.serialiseer());
+      if(undoStapel.length>25) undoStapel.shift();
+      if(Array.isArray(data)&&data.length&&data[0].id&&data[0].taak){        // export uit de eerste versie
+        app.projecten=[{id:"P1",naam:"Gebouw 21",taken:data}]; app.actief="P1";
+      }else if(data.projecten){
+        zetToestandTerug(data);
+      }
+      else throw new Error();
+      migreerFases();
+      bewaar(); ververs();
+    }catch(err){ alert("Dit bestand is geen geldige werfplanning-export."); }
+    e.target.value=""; };
+  lezer.readAsText(f);
+});
+document.getElementById("knopExportCsv").onclick=()=>{
+  const kop=["Project","TaakID","Lot","LotOmschrijving","Taak","Fase","Wie","StartDatum","EindDatum","Duur (dagen)","Status","Voortgang (%)","Prioriteit","Opmerking"];
+  const rijen=app.projecten.flatMap(p=>p.taken.map(t=>[p.naam,t.id,t.lot,t.lot_omschrijving,t.taak,t.fase,t.wie||"",
+    toonDatum(t.start),toonDatum(t.einde),duurVan(t),t.status,t.voortgang,t.prioriteit,t.opmerking]));
+  const csv=[kop,...rijen].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(";")).join("\r\n");
+  downloadTekst("\uFEFF"+csv,"werfplanning_"+naarIso(new Date())+".csv","text/csv;charset=utf-8");
+};
+function downloadTekst(inhoud,naam,type){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([inhoud],{type}));
+  a.download=naam; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ---------- projectsjablonen ---------- */
+let eigenSjablonen=[];
+let verborgenSjablonen=[];
+try{ const s=localStorage.getItem(OPSLAGSLEUTEL+"_sjablonen"); if(s) eigenSjablonen=JSON.parse(s)||[]; }catch(e){}
+try{ const v=localStorage.getItem(OPSLAGSLEUTEL+"_sjablonen_weg"); if(v) verborgenSjablonen=JSON.parse(v)||[]; }catch(e){}
+function bewaarSjablonen(){ try{
+  localStorage.setItem(OPSLAGSLEUTEL+"_sjablonen",JSON.stringify(eigenSjablonen));
+  localStorage.setItem(OPSLAGSLEUTEL+"_sjablonen_weg",JSON.stringify(verborgenSjablonen));
+}catch(e){} }
+
+function alleSjablonen(){
+  const ingebouwd=[
+    {naam:"Gebouw 21",ingebouwd:true,taken:SEED_STATE.projecten[0].taken},
+    {naam:SJABLOON_ARBA.naam,ingebouwd:true,taken:SJABLOON_ARBA.taken}
+  ].filter(s=>!verborgenSjablonen.includes(s.naam));
+  return ingebouwd.concat(eigenSjablonen.map(s=>({naam:s.naam,ingebouwd:false,taken:s.taken})));
+}
+function projectUitSjabloon(sjabloon,projectNaam){
+  const taken=JSON.parse(JSON.stringify(sjabloon.taken));
+  // alles verschuiven zodat de vroegste taak op de eerstvolgende maandag start
+  const vroegste=taken.reduce((a,t)=>t.start<a?t.start:a,taken[0].start);
+  const delta=verschilDagen(volgendeMaandag(),vroegste);
+  let n=0;
+  for(const t of taken){
+    n+=1;
+    t.id="T"+String(n).padStart(3,"0");
+    t.start=plusDagen(t.start,delta);
+    t.einde=plusDagen(t.einde,delta);
+    t.status="Niet gestart"; t.voortgang=0; t.opmerking="";
+    delete t._duur; delete t._buffer;
+  }
+  const p={id:app.nieuwProjectId(),naam:projectNaam,taken};
+  app.projecten.push(p);
+  app.actief=p.id;
+  return p.id;
+}
+
+/* ---------- taaksuggesties per fase: eigen paneel + eigen catalogus ---------- */
+const suggestiePaneel=document.createElement("div");
+suggestiePaneel.id="taaksuggesties";
+document.body.appendChild(suggestiePaneel);
+
+let eigenCatalogus={};
+try{ const c=localStorage.getItem(OPSLAGSLEUTEL+"_catalogus"); if(c) eigenCatalogus=JSON.parse(c)||{}; }catch(e){}
+function bewaarCatalogus(){ try{ localStorage.setItem(OPSLAGSLEUTEL+"_catalogus",JSON.stringify(eigenCatalogus)); }catch(e){} }
+function catalogusVoor(fase){
+  const vast=TAAKCATALOGUS[fase]||[];
+  const eigen=(eigenCatalogus[fase]||[]).filter(n=>!vast.includes(n));
+  return {vast,eigen};
+}
+
+function toonSuggesties(inp,fase){
+  if(!TAAKCATALOGUS[fase]){ verbergSuggesties(); return; }
+  const {vast,eigen}=catalogusVoor(fase);
+  const filter=inp.dataset.getypt==="1" ? inp.value.trim().toLowerCase() : "";
+  const past=n=>!filter||n.toLowerCase().includes(filter);
+  suggestiePaneel.innerHTML=`<div class="kopje">Standaardtaken — ${fase}</div>`;
+
+  const maakItem=(naam,isEigen)=>{
+    const el=document.createElement("div");
+    el.className="item"+(naam===inp.value?" huidig":"");
+    el.textContent=naam;
+    el.onmousedown=e=>{
+      e.preventDefault();
+      inp.value=naam;
+      inp.dispatchEvent(new Event("change",{bubbles:true}));
+      verbergSuggesties();
+    };
+    if(isEigen){
+      const weg=document.createElement("span");
+      weg.className="verwijder-eigen";
+      weg.textContent="✕";
+      weg.title="Uit de catalogus verwijderen";
+      weg.onmousedown=e=>{
+        e.preventDefault(); e.stopPropagation();
+        eigenCatalogus[fase]=(eigenCatalogus[fase]||[]).filter(n=>n!==naam);
+        bewaarCatalogus();
+        toonSuggesties(inp,fase);
+        melding(`"${naam}" uit de catalogus verwijderd.`);
+      };
+      el.appendChild(weg);
+    }
+    suggestiePaneel.appendChild(el);
+  };
+  let getoond=0;
+  vast.filter(past).forEach(n=>{ maakItem(n,false); getoond++; });
+  eigen.filter(past).forEach(n=>{ maakItem(n,true); getoond++; });
+  if(!getoond){ vast.forEach(n=>maakItem(n,false)); eigen.forEach(n=>maakItem(n,true)); }
+
+  // leeg veld: nieuwe taak rechtstreeks aan de catalogus toevoegen
+  const voegRij=document.createElement("div");
+  voegRij.className="voegrij";
+  const voegVeld=document.createElement("input");
+  voegVeld.type="text";
+  voegVeld.placeholder="+ Nieuwe taak toevoegen aan catalogus…";
+  voegVeld.onmousedown=e=>e.stopPropagation();
+  voegVeld.addEventListener("keydown",e=>{
+    if(e.key==="Escape"){ verbergSuggesties(); return; }
+    if(e.key!=="Enter") return;
+    const naam=voegVeld.value.trim();
+    if(!naam) return;
+    const alles=vast.concat(eigenCatalogus[fase]||[]);
+    if(!alles.includes(naam)){
+      (eigenCatalogus[fase]=eigenCatalogus[fase]||[]).push(naam);
+      bewaarCatalogus();
+      melding(`"${naam}" toegevoegd aan de catalogus (${fase}).`);
+    }
+    inp.value=naam;
+    inp.dispatchEvent(new Event("change",{bubbles:true}));
+    verbergSuggesties();
+  });
+  voegRij.appendChild(voegVeld);
+  suggestiePaneel.appendChild(voegRij);
+
+  const r=inp.getBoundingClientRect();
+  suggestiePaneel.style.left=(r.left+window.scrollX)+"px";
+  suggestiePaneel.style.top=(r.bottom+window.scrollY+4)+"px";
+  suggestiePaneel.style.minWidth=Math.max(r.width,260)+"px";
+  suggestiePaneel.classList.add("zichtbaar");
+}
+function verbergSuggesties(){ suggestiePaneel.classList.remove("zichtbaar"); }
+window.addEventListener("scroll",e=>{ if(!suggestiePaneel.contains(e.target)) verbergSuggesties(); },true);
+
+/* ---------- uitklapmenu's ---------- */
+document.querySelectorAll(".menuwrap>.knop").forEach(k=>{
+  k.onclick=e=>{
+    e.stopPropagation();
+    const wrap=k.parentElement;
+    document.querySelectorAll(".menuwrap.open").forEach(o=>{ if(o!==wrap) o.classList.remove("open"); });
+    wrap.classList.toggle("open");
+  };
+});
+document.addEventListener("click",()=>document.querySelectorAll(".menuwrap.open").forEach(o=>o.classList.remove("open")));
+
+/* ---------- start ---------- */
+laad();
+ververs();
+maakHerstelpunt();          // beginsituatie meteen veiligstellen
+toonExportherinnering();
+} /* einde browser-gedeelte */
+
+if(typeof module!=="undefined") module.exports={app,zetStart,zetEinde,taakToevoegen,lotToevoegen,taakVerwijderen,verplaatsTaak,taakVan,lotIndices,loten,plusDagen,verschilDagen,duurVan,lotStatus,SEED_STATE};
+</script>
+</body>
+</html>
