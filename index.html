@@ -47,6 +47,7 @@ button{font:inherit;cursor:pointer}
 .cv-topbar-nav .tab:hover{color:var(--cv-white)}
 .cv-topbar-nav .tab.actief{color:var(--cv-white);border-bottom-color:var(--tb-groen)}
 
+
 /* ---------- werkbalk ---------- */
 #werkbalk{background:var(--cv-white);border-bottom:1px solid var(--cv-grey-200);padding:10px 24px;
   display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -235,6 +236,12 @@ td .id{font-weight:700;white-space:nowrap;color:var(--cv-dark)}
 tr:hover .verwijder,tr:hover .verplaats{opacity:1}
 
 /* ---------- gantt ---------- */
+.ganttbalk{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.ganttbalk .label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--cv-grey-400);margin-right:2px}
+.ganttbalk .zoomknop.actief{background:var(--cv-blue);border-color:var(--cv-blue);color:var(--cv-white)}
+.ganttbalk .naarvandaag{margin-left:8px}
+.gkop.maandstart{border-left:1px solid rgba(255,255,255,.45)}
+.gkop .maandlabel{position:absolute;left:3px;top:12px;font-size:10px;white-space:nowrap;pointer-events:none}
 .ganttscroll{overflow:auto;border:1px solid var(--cv-grey-200);border-radius:var(--cv-radius-md);max-height:72vh;box-shadow:var(--cv-shadow-sm)}
 .ganttgrid{display:grid;width:max-content;font-size:13px}
 .gcel{border-right:1px solid var(--cv-grey-200);border-bottom:1px solid var(--cv-grey-200);position:relative;background:var(--cv-white)}
@@ -337,6 +344,13 @@ tr:hover .verwijder,tr:hover .verplaats{opacity:1}
   </div>
 
   <div class="paneel" id="paneel-gantt">
+    <div class="ganttbalk">
+      <span class="label">Zoom:</span>
+      <button class="knop klein zoomknop" data-zoom="week">Weken</button>
+      <button class="knop klein zoomknop" data-zoom="maand">Maanden</button>
+      <button class="knop klein zoomknop" data-zoom="alles">Alles tonen</button>
+      <button class="knop klein naarvandaag" data-grid="ganttgrid">Naar vandaag</button>
+    </div>
     <div class="ganttscroll"><div class="ganttgrid" id="ganttgrid"></div></div>
     <div class="legende">
       <b style="color:var(--tekst)">Legende:</b>
@@ -350,6 +364,13 @@ tr:hover .verwijder,tr:hover .verplaats{opacity:1}
   </div>
 
   <div class="paneel" id="paneel-totaal">
+    <div class="ganttbalk">
+      <span class="label">Zoom:</span>
+      <button class="knop klein zoomknop" data-zoom="week">Weken</button>
+      <button class="knop klein zoomknop" data-zoom="maand">Maanden</button>
+      <button class="knop klein zoomknop" data-zoom="alles">Alles tonen</button>
+      <button class="knop klein naarvandaag" data-grid="totaalgrid">Naar vandaag</button>
+    </div>
     <div class="ganttscroll"><div class="ganttgrid" id="totaalgrid"></div></div>
     <div class="legende">
       <b style="color:var(--tekst)">Totaalplanning:</b>
@@ -579,7 +600,8 @@ function taakToevoegen(p,lot,naam){
     taak:naam,fase:laatste.fase||"",wie:"",start,einde:plusDagen(start,13),
     status:"Niet gestart",voortgang:0,prioriteit:"Medium",opmerking:""};
   p.taken.splice(idx[idx.length-1]+1,0,nieuw);
-  return nieuw.id;
+  hernummerTaken(p);
+  return nieuw.id;          // ID na hernummering
 }
 function lotToevoegen(p,lotNaam,omschrijving){
   const start=volgendeMaandag();
@@ -587,6 +609,7 @@ function lotToevoegen(p,lotNaam,omschrijving){
     taak:TAAKCATALOGUS["Ontwerp"][0],fase:"Ontwerp",wie:"",start,einde:plusDagen(start,13),
     status:"Niet gestart",voortgang:0,prioriteit:"Medium",opmerking:""};
   p.taken.push(nieuw);
+  hernummerTaken(p);
   return nieuw.id;
 }
 function verplaatsTaak(p,id,richting){   // richting: -1 = omhoog, +1 = omlaag (binnen het lot)
@@ -602,6 +625,7 @@ function verplaatsTaak(p,id,richting){   // richting: -1 = omhoog, +1 = omlaag (
   eerste.start=anker;
   eerste.einde=plusDagen(anker,eerste._duur-1);
   cascadeVanaf(p,lot,0);                      // hele ketting herrekenen in de nieuwe volgorde
+  hernummerTaken(p);
   return true;
 }
 function taakKopieren(p,id){
@@ -619,6 +643,7 @@ function taakKopieren(p,id){
   kopie._duur=d; kopie._buffer=0;             // kopie sluit direct aan op het origineel
   const pos=lotIndices(p,lot).indexOf(i+1);
   cascadeVanaf(p,lot,pos);                    // volgende taken schuiven automatisch door
+  hernummerTaken(p);
   return kopie.id;
 }
 function lotKopieren(p,lot,nieuweNaam){
@@ -628,9 +653,8 @@ function lotKopieren(p,lot,nieuweNaam){
     delete k._duur; delete k._buffer;
     return k;
   });
-  let n=Math.max(0,...p.taken.map(t=>parseInt(t.id.slice(1),10)||0));
-  kopies.forEach(k=>{ n+=1; k.id="T"+String(n).padStart(3,"0"); });
   p.taken.splice(idx[idx.length-1]+1,0,...kopies);   // direct na het origineel
+  hernummerTaken(p);
   return nieuweNaam;
 }
 function hernoemLot(p,oudeNaam,nieuweNaam){
@@ -641,6 +665,16 @@ function hernoemLot(p,oudeNaam,nieuweNaam){
 }
 function zetLotOmschrijving(p,lot,tekst){
   lotIndices(p,lot).forEach(i=>{ p.taken[i].lot_omschrijving=tekst; });
+}
+function hernummerTaken(p){
+  // taakID's doorlopend maken in de zichtbare volgorde (lot na lot, taak na taak)
+  let n=0, gewijzigd=false;
+  for(const t of p.taken){
+    n+=1;
+    const nieuw="T"+String(n).padStart(3,"0");
+    if(t.id!==nieuw){ t.id=nieuw; gewijzigd=true; }
+  }
+  return gewijzigd;
 }
 function hernummer(p){
   // eerst ALLE blokken vastleggen, dan pas hernoemen (anders raken namen elkaar kwijt)
@@ -653,9 +687,7 @@ function hernummer(p){
       b.taken.forEach(t=>t.lot=nieuweNaam);
     }
   }
-  // taakID's doorlopend hernummeren in de zichtbare volgorde
-  let n=0;
-  for(const t of p.taken){ n+=1; t.id="T"+String(n).padStart(3,"0"); }
+  hernummerTaken(p);
 }
 function verplaatsLot(p,lot,richting){   // richting: -1 = omhoog, +1 = omlaag
   const namen=loten(p);
@@ -671,6 +703,7 @@ function verplaatsLot(p,lot,richting){   // richting: -1 = omhoog, +1 = omlaag
 }
 function lotVerwijderen(p,lot){
   p.taken=p.taken.filter(t=>t.lot!==lot);   // andere loten lopen parallel en blijven onaangeroerd
+  hernummerTaken(p);
 }
 function taakVerwijderen(p,id){
   const i=vindTaak(p,id), lot=p.taken[i].lot;
@@ -678,6 +711,7 @@ function taakVerwijderen(p,id){
   const pos=lotIndices(p,lot).indexOf(i);
   p.taken.splice(i,1);
   if(lotIndices(p,lot).length && pos>0) cascadeVanaf(p,lot,pos-1);
+  hernummerTaken(p);
 }
 function samenvatting(){
   const actieve=app.projecten.filter(p=>!p.gearchiveerd);
@@ -747,7 +781,9 @@ function laad(){
     const j=localStorage.getItem(OPSLAGSLEUTEL);
     if(j){
       app.laadUit(j);
-      if(migreerFases()) bewaar();
+      let opgeschoond=migreerFases();
+      for(const p of app.projecten){ if(hernummerTaken(p)) opgeschoond=true; }
+      if(opgeschoond) bewaar();
       if(!localStorage.getItem(OPSLAGSLEUTEL+"_g21weg")){
         if(app.projecten.some(p=>p.naam==="Gebouw 21")){
           undoStapel.push(app.serialiseer());          // herstelbaar via Ongedaan maken
@@ -1185,7 +1221,17 @@ function keuzeCel(opties,waarde,bijWijziging,klas){
 /* ---------- gantt (gedeelde bouwstenen) ---------- */
 const KLEUR={"Voltooid":"var(--voltooid)","In uitvoering":"var(--uitvoering)",
              "Niet gestart":"var(--gepland)","Geblokkeerd":"var(--geblokkeerd)"};
-const WB=38, RIJH="30px";
+let WB=38; const RIJH="30px";
+let ganttZoom="week";
+try{ ganttZoom=localStorage.getItem(OPSLAGSLEUTEL+"_zoom")||"week"; }catch(e){}
+function berekenWB(grid,aantalWeken){
+  if(ganttZoom==="maand") return 14;
+  if(ganttZoom==="alles"){
+    const breed=(grid.parentElement.clientWidth||1100)-340;
+    return Math.max(5,Math.min(38,breed/Math.max(aantalWeken,1)));
+  }
+  return 38;
+}
 
 function weekbereik(taken){
   const w0=maandagVan(naarDatum(taken.reduce((a,t)=>t.start<a?t.start:a,taken[0].start)));
@@ -1199,10 +1245,16 @@ function kopregel(grid,weken,nuMa,hoektekst){
   const hoek=document.createElement("div");
   hoek.className="gcel gkop hoek"; hoek.textContent=hoektekst;
   grid.appendChild(hoek);
+  const MAAND=["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
   weken.forEach(w=>{
     const c=document.createElement("div");
     c.className="gcel gkop"+(w.getTime()===nuMa?" nu":"");
-    c.innerHTML=`W${isoWeek(w)}<small>${String(w.getDate()).padStart(2,"0")}/${String(w.getMonth()+1).padStart(2,"0")}</small>`;
+    if(WB>=30){
+      c.innerHTML=`W${isoWeek(w)}<small>${String(w.getDate()).padStart(2,"0")}/${String(w.getMonth()+1).padStart(2,"0")}</small>`;
+    }else if(w.getDate()<=7&&WB>=8){          // enkel de eerste week van elke maand benoemen
+      c.classList.add("maandstart");
+      c.innerHTML=`<span class="maandlabel">${MAAND[w.getMonth()]}${w.getMonth()===0?" "+String(w.getFullYear()).slice(2):""}</span>`;
+    }
     grid.appendChild(c);
   });
 }
@@ -1230,7 +1282,7 @@ function balkrij(grid,weken,nuMa,w0,labelTekst,start,einde,statusKleur,voortgang
       const b=document.createElement("div");
       b.className="gbalk";
       b.style.left=px0+"px";
-      b.style.width=Math.max(px1-px0,6)+"px";
+      b.style.width=Math.max(px1-px0,WB>=20?6:3)+"px";
       b.style.background=statusKleur;
       b.title=titel;
       if(voortgang>0&&voortgang<100){
@@ -1247,17 +1299,34 @@ function balkrij(grid,weken,nuMa,w0,labelTekst,start,einde,statusKleur,voortgang
 }
 
 /* ---------- gantt actief project ---------- */
+const ganttWeken={};   // laatst getekende weken per weergave, voor "Naar vandaag"
 function bewaarGanttScroll(grid){
   const sc=grid.parentElement;
   return {sc, links:sc.scrollLeft, top:sc.scrollTop, eerste:!sc.dataset.init};
 }
+function naarVandaag(gridId,zacht){
+  const grid=document.getElementById(gridId);
+  const sc=grid.parentElement;
+  const gegevens=ganttWeken[gridId];
+  if(!gegevens||!sc.clientWidth) return false;   // verborgen tabblad: nog niet mogelijk
+  const {weken,nuMa,wb}=gegevens;
+  let idx=weken.findIndex(w=>w.getTime()===nuMa);
+  if(idx<0){                                     // vandaag valt buiten het project
+    idx=weken.findIndex(w=>w.getTime()>nuMa);
+    if(idx<0) idx=weken.length-1;
+  }
+  const doel=Math.max(0,330+idx*wb-sc.clientWidth/2);
+  if(zacht&&sc.scrollTo) sc.scrollTo({left:doel,behavior:"smooth"}); else sc.scrollLeft=doel;
+  sc.dataset.init="1";
+  return true;
+}
 function herstelGanttScroll(st,weken,nuMa){
   if(!st) return;
   const sc=st.sc;
+  const gridId=sc.querySelector(".ganttgrid").id;
+  ganttWeken[gridId]={weken,nuMa,wb:WB};
   if(st.eerste){
-    sc.dataset.init="1";
-    const idx=weken.findIndex(w=>w.getTime()===nuMa);
-    if(idx>0) sc.scrollLeft=Math.max(0,330+idx*WB-(sc.clientWidth||900)/2);
+    if(!naarVandaag(gridId,false)) sc.dataset.init="";   // lukt pas als het tabblad zichtbaar is
   }else{
     sc.scrollLeft=st.links; sc.scrollTop=st.top;
   }
@@ -1270,6 +1339,7 @@ function tekenGantt(){
   if(!p||!p.taken.length) return;
   const {w0,weken}=weekbereik(p.taken);
   const nuMa=maandagVan(new Date()).getTime();
+  WB=berekenWB(grid,weken.length);
   grid.style.gridTemplateColumns=`330px repeat(${weken.length},${WB}px)`;
   kopregel(grid,weken,nuMa,p.naam);
   for(const lot of loten(p)){
@@ -1297,6 +1367,7 @@ function tekenTotaal(){
   if(!alle.length) return;
   const {w0,weken}=weekbereik(alle);
   const nuMa=maandagVan(new Date()).getTime();
+  WB=berekenWB(grid,weken.length);
   grid.style.gridTemplateColumns=`330px repeat(${weken.length},${WB}px)`;
   kopregel(grid,weken,nuMa,"Project / Lot");
   for(const p of zichtbaar){
@@ -1322,10 +1393,40 @@ function tekenTotaal(){
 function toonPaneel(naam){
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("actief",t.dataset.paneel===naam));
   document.querySelectorAll(".paneel").forEach(pn=>pn.classList.toggle("actief",pn.id==="paneel-"+naam));
+  const gridId=naam==="gantt"?"ganttgrid":(naam==="totaal"?"totaalgrid":null);
+  if(gridId){
+    const sc=document.getElementById(gridId).parentElement;
+    if(ganttZoom==="alles"){ ververs(); }                 // breedte pas nu bekend
+    if(!sc.dataset.init) naarVandaag(gridId,false);       // eerste keer: op vandaag zetten
+  }
 }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>toonPaneel(t.dataset.paneel));
 
 /* ---------- werkbalk ---------- */
+/* ---------- zoom en navigatie in de Gantt ---------- */
+function markeerZoomknoppen(){
+  document.querySelectorAll(".zoomknop").forEach(b=>
+    b.classList.toggle("actief",b.dataset.zoom===ganttZoom));
+}
+document.querySelectorAll(".zoomknop").forEach(b=>{
+  b.onclick=()=>{
+    ganttZoom=b.dataset.zoom;
+    try{ localStorage.setItem(OPSLAGSLEUTEL+"_zoom",ganttZoom); }catch(e){}
+    document.querySelectorAll(".ganttscroll").forEach(sc=>sc.dataset.init="");
+    markeerZoomknoppen();
+    ververs();
+    const actief=document.querySelector(".paneel.actief");
+    if(actief){
+      const g=actief.querySelector(".ganttgrid");
+      if(g) naarVandaag(g.id,false);
+    }
+  };
+});
+document.querySelectorAll(".naarvandaag").forEach(b=>{
+  b.onclick=()=>{ if(!naarVandaag(b.dataset.grid,true)) melding("Nog niet mogelijk — open eerst deze weergave."); };
+});
+markeerZoomknoppen();
+
 document.getElementById("knopOngedaan").onclick=()=>{
   const huidig=app.serialiseer();
   let vorige=null;
