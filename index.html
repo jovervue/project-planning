@@ -39,6 +39,7 @@ button{font:inherit;cursor:pointer}
 .cv-woordmerk .naam em{font-style:normal;color:var(--tb-groen)}
 .cv-woordmerk .door{display:block;font-size:9px;font-weight:700;letter-spacing:.22em;
   text-transform:uppercase;color:var(--tb-licht);margin-top:2px}
+.cv-woordmerk .versie{color:var(--tb-groen);letter-spacing:.1em}
 .cv-topbar-scheiding{width:1px;height:30px;background:rgba(255,255,255,.35)}
 .cv-topbar-nav{display:flex;gap:2px;flex-wrap:wrap}
 .cv-topbar-nav .tab{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
@@ -67,6 +68,7 @@ button{font:inherit;cursor:pointer}
   transition:border-color .18s,box-shadow .18s}
 #projectkeuze:focus{border-color:var(--cv-blue);box-shadow:0 0 0 3px rgba(13,123,191,.15)}
 #werkbalk{position:sticky;top:0;z-index:20}
+#synctekst{margin-left:auto;font-size:12px;color:var(--cv-grey-400);font-style:italic}
 .scheiding{width:1px;height:24px;background:var(--cv-grey-200);margin:0 4px}
 
 /* uitklapmenu's */
@@ -280,7 +282,7 @@ tr:hover .verwijder,tr:hover .verplaats{opacity:1}
       </svg></span>
     <span class="cv-woordmerk">
       <span class="naam">project<em>planning</em></span>
-      <span class="door">by CvoorU</span>
+      <span class="door">by CvoorU <span class="versie">v2.2</span></span>
     </span>
   </div>
   <span class="cv-topbar-scheiding"></span>
@@ -328,6 +330,7 @@ tr:hover .verwijder,tr:hover .verplaats{opacity:1}
     </div>
   </div>
   <input type="file" id="importBestand" accept=".json" style="display:none">
+  <span id="synctekst"></span>
 </div>
 
 
@@ -806,6 +809,21 @@ function laad(){
   app.projecten=[];
   app.voegProjectToe("Nieuw project");
   if(!opslagWerkt) toonOpslagmelding();
+}
+function toonSynctekst(){
+  const el=document.getElementById("synctekst");
+  if(!el) return;
+  let exp=0, imp=0;
+  try{
+    exp=parseInt(localStorage.getItem(OPSLAGSLEUTEL+"_export")||"0",10);
+    imp=parseInt(localStorage.getItem(OPSLAGSLEUTEL+"_import")||"0",10);
+  }catch(e){}
+  const laatste=Math.max(exp,imp);
+  if(!laatste){ el.textContent="Dit toestel is nog niet gesynchroniseerd"; return; }
+  const d=new Date(laatste);
+  const wanneer=String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear()+
+                " "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  el.textContent=(imp>=exp?"Ingelezen op ":"Reservekopie op ")+wanneer;
 }
 function toonExportherinnering(){
   const balk=document.getElementById("exportherinnering");
@@ -1537,7 +1555,7 @@ document.getElementById("knopExportJson").onclick=()=>{
   downloadTekst(JSON.stringify(uit),"projectplanning_reservekopie_"+naarIso(new Date())+".json","application/json");
   try{ localStorage.setItem(OPSLAGSLEUTEL+"_export",String(Date.now())); }catch(e){}
   melding("Reservekopie bewaard — zet ze op een schijf of netwerkmap.");
-  toonExportherinnering();
+  toonExportherinnering(); toonSynctekst();
 };
 document.getElementById("knopImportJson").onclick=()=>document.getElementById("importBestand").click();
 document.getElementById("importBestand").addEventListener("change",e=>{
@@ -1550,7 +1568,19 @@ document.getElementById("importBestand").addEventListener("change",e=>{
       if(Array.isArray(data)&&data.length&&data[0].id&&data[0].taak){        // export uit de eerste versie
         app.projecten=[{id:"P1",naam:"Gebouw 21",taken:data}]; app.actief="P1";
       }else if(data.projecten){
+        const telTaken=lijst=>lijst.reduce((s,p)=>s+((p.taken&&p.taken.length)||0),0);
+        const wanneer=data.bewaardOp
+          ? new Date(data.bewaardOp).toLocaleString("nl-BE",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})
+          : "onbekende datum";
+        const vraag=
+          `RESERVEKOPIE\n   bewaard op ${wanneer}\n   ${data.projecten.length} project(en) • ${telTaken(data.projecten)} taken\n\n`+
+          `DIT TOESTEL NU\n   ${app.projecten.length} project(en) • ${telTaken(app.projecten)} taken\n\n`+
+          `De gegevens op dit toestel worden volledig vervangen door de reservekopie.\nDoorgaan?`;
+        if(!confirm(vraag)){ e.target.value=""; return; }
         zetToestandTerug(data);
+        try{ localStorage.setItem(OPSLAGSLEUTEL+"_import",String(Date.now())); }catch(er){}
+        toonSynctekst();
+        melding(`Reservekopie van ${wanneer} ingelezen.`);
       }
       else throw new Error();
       migreerFases();
@@ -1712,6 +1742,7 @@ laad();
 ververs();
 maakHerstelpunt();          // beginsituatie meteen veiligstellen
 toonExportherinnering();
+toonSynctekst();
 } /* einde browser-gedeelte */
 
 if(typeof module!=="undefined") module.exports={app,zetStart,zetEinde,taakToevoegen,lotToevoegen,taakVerwijderen,verplaatsTaak,taakVan,lotIndices,loten,plusDagen,verschilDagen,duurVan,lotStatus,SEED_STATE};
