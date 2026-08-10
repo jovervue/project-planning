@@ -172,6 +172,34 @@ select optgroup{font-style:normal;font-weight:700;color:var(--cv-grey-400)}
 .herstelrij.nu{border-color:var(--cv-blue);background:var(--cv-blue-light)}
 #herstelpuntenlijst .leeg{font-size:13px;color:var(--cv-grey-400);font-style:italic;padding:8px 2px}
 
+/* synchronisatievenster */
+#syncvenster{display:none;position:fixed;inset:0;background:rgba(29,34,49,.45);z-index:60;
+  align-items:center;justify-content:center;padding:20px}
+#syncvenster.open{display:flex}
+#syncvenster .venster{background:var(--cv-white);border-radius:var(--cv-radius-md);
+  box-shadow:0 8px 24px rgba(13,123,191,.18);width:100%;max-width:560px;max-height:85vh;
+  display:flex;flex-direction:column;overflow:hidden}
+#syncvenster .vensterkop{background:var(--cv-blue);color:var(--cv-white);padding:14px 18px;
+  font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+#syncvenster .sluit{background:none;border:none;color:var(--cv-white);font-size:16px;padding:2px 6px;border-radius:var(--cv-radius-sm)}
+#syncvenster .sluit:hover{background:rgba(255,255,255,.2)}
+#syncvenster .vensterinhoud{padding:16px 18px;overflow:auto}
+#syncvenster .uitleg{font-size:13px;color:var(--cv-grey-700);margin-bottom:14px}
+#syncvenster .waarschuwing{font-size:12px;color:#78350F;background:#FEF3C7;border-left:4px solid var(--cv-warning);
+  border-radius:var(--cv-radius-sm);padding:10px 12px;margin-top:14px}
+.syncveld{display:block;margin-bottom:10px}
+.syncveld span{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--cv-grey-700);margin-bottom:4px}
+.syncveld input{width:100%;font-family:var(--cv-font);font-size:14px;color:var(--cv-dark);
+  border:1.5px solid var(--cv-grey-200);border-radius:var(--cv-radius-sm);padding:8px 10px;outline:none}
+.syncveld input:focus{border-color:var(--cv-blue);box-shadow:0 0 0 3px rgba(13,123,191,.15)}
+.syncaan{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--cv-dark);margin:12px 0}
+.syncknoppen{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+#syncuitslag{margin-top:12px;font-size:13px;padding:0}
+#syncuitslag.ok{color:var(--cv-green-dark)}
+#syncuitslag.fout{color:var(--cv-error)}
+#syncuitslag.bezig{color:var(--cv-grey-700);font-style:italic}
+
 /* melding onderaan */
 #melding{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
   background:var(--cv-dark);color:var(--cv-white);font-size:13px;font-weight:600;
@@ -282,7 +310,7 @@ tr:hover .verwijder,tr:hover .verplaats{opacity:1}
       </svg></span>
     <span class="cv-woordmerk">
       <span class="naam">project<em>planning</em></span>
-      <span class="door">by CvoorU <span class="versie">v2.2</span></span>
+      <span class="door">by CvoorU <span class="versie">v2.4</span></span>
     </span>
   </div>
   <span class="cv-topbar-scheiding"></span>
@@ -325,6 +353,10 @@ tr:hover .verwijder,tr:hover .verplaats{opacity:1}
       <div class="menuscheiding"></div>
       <div class="menukopje">Automatisch bewaard</div>
       <button id="knopHerstelpunten">Herstelpunten…</button>
+      <div class="menuscheiding"></div>
+      <div class="menukopje">Synchronisatie</div>
+      <button id="knopSyncInstellen">Synchronisatie via GitHub…</button>
+      <button id="knopSyncNu">Nu synchroniseren</button>
       <div class="menuscheiding"></div>
       <button id="knopExportCsv">Exporteer CSV (Excel)</button>
     </div>
@@ -384,6 +416,39 @@ tr:hover .verwijder,tr:hover .verplaats{opacity:1}
 </main>
 
 <div id="melding"></div>
+
+<div id="syncvenster" role="dialog" aria-modal="true">
+  <div class="venster">
+    <div class="vensterkop">
+      <span>Synchronisatie via GitHub</span>
+      <button class="sluit" id="knopSluitSync" title="Sluiten">✕</button>
+    </div>
+    <div class="vensterinhoud">
+      <p class="uitleg">De app bewaart je planning automatisch in een <b>privérepository</b> op GitHub,
+        zodat al je toestellen dezelfde gegevens tonen. Vul dit op elk toestel eenmalig in.</p>
+      <label class="syncveld"><span>Repository (eigenaar/naam)</span>
+        <input type="text" id="syncRepo" placeholder="jovervue/planning-data" autocomplete="off"></label>
+      <label class="syncveld"><span>Toegangssleutel (fine-grained token)</span>
+        <input type="password" id="syncToken" placeholder="github_pat_…" autocomplete="off"></label>
+      <label class="syncveld"><span>Bestandsnaam</span>
+        <input type="text" id="syncPad" placeholder="planning.json" autocomplete="off"></label>
+      <label class="syncveld"><span>Naam van dit toestel</span>
+        <input type="text" id="syncToestel" placeholder="Kantoor-pc" autocomplete="off"></label>
+      <label class="syncaan"><input type="checkbox" id="syncAuto"> Automatisch synchroniseren bij elke wijziging</label>
+      <div class="syncknoppen">
+        <button class="knop primair" id="knopSyncBewaar">Bewaren</button>
+        <button class="knop" id="knopSyncTest">Verbinding testen</button>
+        <button class="knop" id="knopSyncPush">Nu versturen →</button>
+        <button class="knop" id="knopSyncPull">← Nu ophalen</button>
+      </div>
+      <div id="syncuitslag"></div>
+      <p class="waarschuwing">De sleutel blijft op dit toestel staan en wordt nooit mee geüpload.
+        Maak hem aan onder GitHub → Settings → Developer settings → Fine-grained tokens,
+        met toegang tot <b>enkel</b> je gegevensrepository en de rechten <b>Contents: Read and write</b>.
+        Deel hem met niemand.</p>
+    </div>
+  </div>
+</div>
 
 <div id="herstelvenster" role="dialog" aria-modal="true">
   <div class="venster">
@@ -742,6 +807,9 @@ const HERSTEL_INTERVAL=30*60*1000; // hoogstens één per half uur
 let herstelpunten=[];
 try{ const h=localStorage.getItem(HERSTEL_SLEUTEL); if(h) herstelpunten=JSON.parse(h)||[]; }catch(e){}
 let maakHerstelpunt=function(){};  // wordt hieronder ingevuld zodra de interface geladen is
+let naBewaren=function(){};        // idem: plant de synchronisatie
+function zetLokaalGewijzigd(t){ try{ localStorage.setItem(OPSLAGSLEUTEL+"_gewijzigd",String(t)); }catch(e){} }
+function lokaalGewijzigd(){ try{ return parseInt(localStorage.getItem(OPSLAGSLEUTEL+"_gewijzigd")||"0",10); }catch(e){ return 0; } }
 
 let opslagWerkt=true;
 function bewaar(){
@@ -752,6 +820,8 @@ function bewaar(){
   }
   catch(e){ opslagWerkt=false; toonOpslagmelding(); return; }
   maakHerstelpunt();
+  zetLokaalGewijzigd(Date.now());
+  naBewaren();
 }
 function migreerFases(){
   const kaart={I:"Ontwerp",B:"Bestek",P:"Publiceren",G:"Gunning",U:"Uitvoering"};
@@ -787,16 +857,6 @@ function laad(){
       let opgeschoond=migreerFases();
       for(const p of app.projecten){ if(hernummerTaken(p)) opgeschoond=true; }
       if(opgeschoond) bewaar();
-      if(!localStorage.getItem(OPSLAGSLEUTEL+"_g21weg")){
-        if(app.projecten.some(p=>p.naam==="Gebouw 21")){
-          undoStapel.push(app.serialiseer());          // herstelbaar via Ongedaan maken
-          app.projecten=app.projecten.filter(p=>p.naam!=="Gebouw 21");
-          if(!app.projecten.length) app.voegProjectToe("Nieuw project");
-          if(!app.projecten.find(p=>p.id===app.actief)) app.actief=app.projecten[0].id;
-          bewaar();
-        }
-        localStorage.setItem(OPSLAGSLEUTEL+"_g21weg","1");
-      }
       return;
     }
     const oud=localStorage.getItem(OUDE_SLEUTEL);      // gegevens uit de eerste versie overnemen
@@ -809,21 +869,6 @@ function laad(){
   app.projecten=[];
   app.voegProjectToe("Nieuw project");
   if(!opslagWerkt) toonOpslagmelding();
-}
-function toonSynctekst(){
-  const el=document.getElementById("synctekst");
-  if(!el) return;
-  let exp=0, imp=0;
-  try{
-    exp=parseInt(localStorage.getItem(OPSLAGSLEUTEL+"_export")||"0",10);
-    imp=parseInt(localStorage.getItem(OPSLAGSLEUTEL+"_import")||"0",10);
-  }catch(e){}
-  const laatste=Math.max(exp,imp);
-  if(!laatste){ el.textContent="Dit toestel is nog niet gesynchroniseerd"; return; }
-  const d=new Date(laatste);
-  const wanneer=String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear()+
-                " "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-  el.textContent=(imp>=exp?"Ingelezen op ":"Reservekopie op ")+wanneer;
 }
 function toonExportherinnering(){
   const balk=document.getElementById("exportherinnering");
@@ -1456,6 +1501,160 @@ document.getElementById("knopOngedaan").onclick=()=>{
   app.laadUit(vorige); bewaar(); ververs();
   melding("Laatste wijziging ongedaan gemaakt.");
 };
+function toonSynctekst(){
+  const el=document.getElementById("synctekst");
+  if(!el) return;
+  let exp=0, imp=0;
+  try{
+    exp=parseInt(localStorage.getItem(OPSLAGSLEUTEL+"_export")||"0",10);
+    imp=parseInt(localStorage.getItem(OPSLAGSLEUTEL+"_import")||"0",10);
+  }catch(e){}
+  const s=(syncIngesteld()&&sync.laatste)?sync:null;
+  if(s){
+    const d=new Date(s.laatste);
+    el.textContent=(s.auto?"Gesynchroniseerd ":"Handmatig gesynchroniseerd ")+
+      String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+" "+
+      String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+
+      (s.toestel?" ("+s.toestel+")":"");
+    return;
+  }
+  const laatste=Math.max(exp,imp);
+  if(!laatste){ el.textContent="Dit toestel is nog niet gesynchroniseerd"; return; }
+  const d=new Date(laatste);
+  const wanneer=String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear()+
+                " "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  el.textContent=(imp>=exp?"Ingelezen op ":"Reservekopie op ")+wanneer;
+}
+
+/* ---------- synchronisatie via GitHub ---------- */
+const SYNC_SLEUTEL=OPSLAGSLEUTEL+"_sync";
+let sync={repo:"",token:"",pad:"planning.json",toestel:"",auto:false,sha:"",laatste:0};
+try{ const s=localStorage.getItem(SYNC_SLEUTEL); if(s) sync=Object.assign(sync,JSON.parse(s)||{}); }catch(e){}
+function bewaarSyncInstellingen(){ try{ localStorage.setItem(SYNC_SLEUTEL,JSON.stringify(sync)); }catch(e){} }
+function syncIngesteld(){ return !!(sync.repo&&sync.token); }
+
+function naarBase64(tekst){
+  const bytes=new TextEncoder().encode(tekst);
+  let bin=""; bytes.forEach(b=>{ bin+=String.fromCharCode(b); });
+  return btoa(bin);
+}
+function vanBase64(b64){
+  const bin=atob(String(b64).replace(/\s/g,""));
+  const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+async function ghVerzoek(methode,body){
+  const url="https://api.github.com/repos/"+sync.repo+"/contents/"+sync.pad;
+  const opties={method:methode,headers:{
+    "Authorization":"Bearer "+sync.token,
+    "Accept":"application/vnd.github+json",
+    "X-GitHub-Api-Version":"2022-11-28"}};
+  if(body){ opties.body=JSON.stringify(body); opties.headers["Content-Type"]="application/json"; }
+  let r;
+  try{ r=await fetch(url,opties); }
+  catch(e){ throw new Error("Geen verbinding met GitHub."); }
+  if(methode==="GET"&&r.status===404) return {leeg:true};
+  let j={};
+  try{ j=await r.json(); }catch(e){}
+  if(!r.ok){
+    if(r.status===401) throw new Error("Sleutel ongeldig of vervallen.");
+    if(r.status===403) throw new Error("Sleutel heeft geen schrijfrechten op deze repository.");
+    if(r.status===404) throw new Error("Repository of bestand niet gevonden — controleer eigenaar/naam.");
+    if(r.status===409) throw new Error("Botsing: op GitHub staat een nieuwere versie. Haal eerst op.");
+    throw new Error((j&&j.message)||("GitHub gaf status "+r.status));
+  }
+  return j;
+}
+function syncMelding(tekst,soort){
+  const el=document.getElementById("syncuitslag");
+  if(el){ el.textContent=tekst; el.className=soort||""; }
+  const st=document.getElementById("synctekst");
+  if(st&&soort!=="stil") st.textContent=tekst;
+}
+async function syncVersturen(stil){
+  if(!syncIngesteld()) throw new Error("Synchronisatie is nog niet ingesteld.");
+  syncMelding("Versturen naar GitHub…","bezig");
+  const bestaand=await ghVerzoek("GET");
+  const inhoud=volledigeToestand();
+  inhoud.bewaardOp=new Date().toISOString();
+  inhoud.toestel=sync.toestel||"onbekend toestel";
+  inhoud.versie="project-planning-1";
+  const body={message:"Planning bijgewerkt via "+inhoud.toestel,content:naarBase64(JSON.stringify(inhoud))};
+  if(!bestaand.leeg&&bestaand.sha) body.sha=bestaand.sha;
+  const uitslag=await ghVerzoek("PUT",body);
+  sync.sha=(uitslag.content&&uitslag.content.sha)||"";
+  sync.laatste=Date.now();
+  bewaarSyncInstellingen();
+  zetLokaalGewijzigd(sync.laatste);
+  syncMelding("Gesynchroniseerd "+nuTijd(),stil?"stil":"ok");
+  toonSynctekst();
+  return true;
+}
+async function syncOphalen(vraagBevestiging){
+  if(!syncIngesteld()) throw new Error("Synchronisatie is nog niet ingesteld.");
+  syncMelding("Ophalen van GitHub…","bezig");
+  const bestand=await ghVerzoek("GET");
+  if(bestand.leeg){ syncMelding("Nog geen planning op GitHub — verstuur eerst.","fout"); return false; }
+  const data=JSON.parse(vanBase64(bestand.content));
+  if(!data.projecten) throw new Error("Het bestand op GitHub bevat geen planning.");
+  if(vraagBevestiging){
+    const telTaken=l=>l.reduce((s,p)=>s+((p.taken&&p.taken.length)||0),0);
+    const wanneer=data.bewaardOp?new Date(data.bewaardOp).toLocaleString("nl-BE"):"onbekend";
+    if(!confirm("OP GITHUB\n   "+wanneer+" via "+(data.toestel||"onbekend toestel")+
+        "\n   "+data.projecten.length+" project(en) • "+telTaken(data.projecten)+" taken\n\n"+
+        "DIT TOESTEL NU\n   "+app.projecten.length+" project(en) • "+telTaken(app.projecten)+" taken\n\n"+
+        "De gegevens op dit toestel worden vervangen. Doorgaan?")){
+      syncMelding("Ophalen geannuleerd.","");
+      return false;
+    }
+  }
+  undoStapel.push(app.serialiseer());
+  if(undoStapel.length>25) undoStapel.shift();
+  zetToestandTerug(data);
+  sync.sha=bestand.sha; sync.laatste=Date.now();
+  bewaarSyncInstellingen();
+  try{ localStorage.setItem(OPSLAGSLEUTEL,app.serialiseer()); }catch(e){}
+  zetLokaalGewijzigd(sync.laatste);
+  ververs();
+  syncMelding("Opgehaald van GitHub ("+nuTijd()+")","ok");
+  toonSynctekst();
+  return true;
+}
+function nuTijd(){
+  const d=new Date();
+  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+let syncTimer=null, syncBezig=false;
+naBewaren=function(){
+  if(!sync.auto||!syncIngesteld()) return;
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(()=>{
+    if(syncBezig) return;
+    syncBezig=true;
+    syncVersturen(true).catch(e=>syncMelding("Synchronisatie mislukt: "+e.message,"fout"))
+      .then(()=>{ syncBezig=false; });
+  },4000);
+};
+window.syncControleren=async function(){   // kijkt of een ander toestel iets wijzigde
+  if(!sync.auto||!syncIngesteld()) return;
+  try{
+    const bestand=await ghVerzoek("GET");
+    if(bestand.leeg||bestand.sha===sync.sha) return;
+    const data=JSON.parse(vanBase64(bestand.content));
+    const opAfstand=data.bewaardOp?new Date(data.bewaardOp).getTime():0;
+    if(lokaalGewijzigd()>sync.laatste){    // dit toestel heeft eigen wijzigingen
+      syncMelding("Let op: een ander toestel wijzigde de planning ("+(data.toestel||"?")+").","fout");
+      return;
+    }
+    if(opAfstand>sync.laatste-60000){
+      await syncOphalen(false);
+      melding("Planning bijgewerkt vanaf "+(data.toestel||"een ander toestel")+".");
+    }
+  }catch(e){ /* stil: netwerk kan tijdelijk weg zijn */ }
+};
+const syncControleren=window.syncControleren;
+
 /* ---------- herstelpunten: volledige toestand ---------- */
 function volledigeToestand(){
   const s=JSON.parse(app.serialiseer());
@@ -1493,6 +1692,75 @@ maakHerstelpunt=function(){
       try{ localStorage.setItem(HERSTEL_SLEUTEL,JSON.stringify(herstelpunten)); }catch(e2){}
     }
   }catch(e){ /* herstelpunten zijn extra: nooit het opslaan blokkeren */ }
+};
+
+/* ---------- synchronisatievenster ---------- */
+function vulSyncVenster(){
+  document.getElementById("syncRepo").value=sync.repo||"";
+  document.getElementById("syncToken").value=sync.token||"";
+  document.getElementById("syncPad").value=sync.pad||"planning.json";
+  document.getElementById("syncToestel").value=sync.toestel||"";
+  document.getElementById("syncAuto").checked=!!sync.auto;
+  document.getElementById("syncuitslag").textContent="";
+  document.getElementById("syncuitslag").className="";
+}
+function leesSyncVenster(){
+  sync.repo=document.getElementById("syncRepo").value.trim().replace(/^https?:\/\/github\.com\//,"").replace(/\.git$/,"").replace(/\/$/,"");
+  sync.token=document.getElementById("syncToken").value.trim();
+  sync.pad=document.getElementById("syncPad").value.trim()||"planning.json";
+  sync.toestel=document.getElementById("syncToestel").value.trim();
+  sync.auto=document.getElementById("syncAuto").checked;
+  bewaarSyncInstellingen();
+}
+function openSyncVenster(){ vulSyncVenster(); document.getElementById("syncvenster").classList.add("open"); }
+document.getElementById("knopSyncInstellen").onclick=openSyncVenster;
+document.getElementById("knopSluitSync").onclick=()=>document.getElementById("syncvenster").classList.remove("open");
+document.getElementById("syncvenster").onclick=e=>{ if(e.target.id==="syncvenster") e.target.classList.remove("open"); };
+document.getElementById("knopSyncBewaar").onclick=()=>{
+  leesSyncVenster();
+  syncMelding(syncIngesteld()?"Instellingen bewaard op dit toestel.":"Vul repository en sleutel in.",
+              syncIngesteld()?"ok":"fout");
+};
+async function controleerRepository(){
+  let r;
+  try{ r=await fetch("https://api.github.com/repos/"+sync.repo,{headers:{
+    "Authorization":"Bearer "+sync.token,
+    "Accept":"application/vnd.github+json",
+    "X-GitHub-Api-Version":"2022-11-28"}}); }
+  catch(e){ throw new Error("Geen verbinding met GitHub."); }
+  if(r.status===401) throw new Error("Sleutel ongeldig of vervallen.");
+  if(r.status===404) throw new Error("Repository \""+sync.repo+"\" niet gevonden, of de sleutel heeft er geen toegang toe.");
+  if(!r.ok) throw new Error("GitHub gaf status "+r.status+".");
+  let j={}; try{ j=await r.json(); }catch(e){}
+  if(j&&j.permissions&&j.permissions.push===false)
+    throw new Error("De sleutel mag lezen maar niet schrijven in deze repository.");
+  return j;
+}
+document.getElementById("knopSyncTest").onclick=async()=>{
+  leesSyncVenster();
+  if(!syncIngesteld()){ syncMelding("Vul eerst repository en sleutel in.","fout"); return; }
+  try{
+    syncMelding("Verbinding testen…","bezig");
+    const info=await controleerRepository();
+    const b=await ghVerzoek("GET");
+    syncMelding((info&&info.private===false?"Let op: deze repository is publiek. ":"")+
+      (b.leeg?"Verbinding in orde — er staat nog geen planning op GitHub. Klik op \"Nu versturen\" om te beginnen."
+             :"Verbinding in orde — planningsbestand gevonden."),
+      info&&info.private===false?"fout":"ok");
+  }catch(e){ syncMelding(e.message,"fout"); }
+};
+document.getElementById("knopSyncPush").onclick=async()=>{
+  leesSyncVenster();
+  try{ await syncVersturen(); }catch(e){ syncMelding(e.message,"fout"); }
+};
+document.getElementById("knopSyncPull").onclick=async()=>{
+  leesSyncVenster();
+  try{ await syncOphalen(true); }catch(e){ syncMelding(e.message,"fout"); }
+};
+document.getElementById("knopSyncNu").onclick=async()=>{
+  if(!syncIngesteld()){ openSyncVenster(); return; }
+  try{ await syncVersturen(); melding("Planning gesynchroniseerd."); }
+  catch(e){ melding("Synchronisatie mislukt: "+e.message); }
 };
 
 /* ---------- herstelpuntenvenster ---------- */
@@ -1545,7 +1813,10 @@ document.getElementById("herstelvenster").onclick=e=>{
   if(e.target.id==="herstelvenster") e.target.classList.remove("open");
 };
 document.addEventListener("keydown",e=>{
-  if(e.key==="Escape") document.getElementById("herstelvenster").classList.remove("open");
+  if(e.key==="Escape"){
+    document.getElementById("herstelvenster").classList.remove("open");
+    document.getElementById("syncvenster").classList.remove("open");
+  }
 });
 
 document.getElementById("knopExportJson").onclick=()=>{
@@ -1743,6 +2014,11 @@ ververs();
 maakHerstelpunt();          // beginsituatie meteen veiligstellen
 toonExportherinnering();
 toonSynctekst();
+if(sync.auto&&syncIngesteld()){
+  syncControleren();
+  setInterval(syncControleren,60000);        // elke minuut kijken of een ander toestel iets wijzigde
+  window.addEventListener("focus",syncControleren);
+}
 } /* einde browser-gedeelte */
 
 if(typeof module!=="undefined") module.exports={app,zetStart,zetEinde,taakToevoegen,lotToevoegen,taakVerwijderen,verplaatsTaak,taakVan,lotIndices,loten,plusDagen,verschilDagen,duurVan,lotStatus,SEED_STATE};
