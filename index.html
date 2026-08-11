@@ -89,6 +89,10 @@ button{font:inherit;cursor:pointer}
   color:var(--cv-grey-400);padding:5px 12px 3px}
 .menu .sjabloonrij{display:flex;align-items:center}
 .menu .sjabloonrij button:first-child{flex:1}
+.menu .sjabloonrij .alslot{width:auto;flex-shrink:0;border:1.5px solid var(--cv-grey-200);background:var(--cv-white);
+  color:var(--cv-blue);font-size:11px;font-weight:700;padding:4px 8px;margin-right:2px;
+  border-radius:var(--cv-radius-sm);white-space:nowrap;cursor:pointer}
+.menu .sjabloonrij .alslot:hover{border-color:var(--cv-blue);background:var(--cv-blue-light)}
 .menu .sjabloonrij .weg{width:auto;color:var(--cv-grey-400);font-size:11px;padding:6px 8px}
 .menu .sjabloonrij .weg:hover{color:var(--cv-error);background:#FEE2E2}
 .menu button small{display:block;font-weight:400;font-size:11px;color:var(--cv-grey-400)}
@@ -237,7 +241,7 @@ main{background:var(--cv-white);min-height:70vh}
 .lotkop .pijl{transition:transform .15s;font-size:11px;color:var(--cv-grey-400)}
 .lotblok.dicht .pijl{transform:rotate(-90deg)}
 .lotkop .lotinfo{color:var(--cv-grey-700);font-size:13px;margin-left:auto}
-.lotblok.dicht table{display:none}
+.lotblok.dicht .tabelwrap{display:none}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{background:var(--cv-blue);color:var(--cv-white);font-size:11px;font-weight:600;letter-spacing:.03em;
   text-transform:uppercase;padding:10px 12px;text-align:left;white-space:nowrap}
@@ -275,7 +279,7 @@ tr:hover .verwijder,tr:hover .verplaats{opacity:1}
 .ganttscroll{overflow:auto;border:1px solid var(--cv-grey-200);border-radius:var(--cv-radius-md);max-height:72vh;box-shadow:var(--cv-shadow-sm)}
 .ganttgrid{display:grid;width:max-content;font-size:13px}
 .gcel{border-right:1px solid var(--cv-grey-200);border-bottom:1px solid var(--cv-grey-200);position:relative;background:var(--cv-white)}
-.glabel{position:sticky;left:0;background:var(--cv-white);z-index:2;padding:5px 10px;white-space:nowrap;overflow:hidden;
+.glabel{position:sticky;left:0;background:var(--cv-white);z-index:2;padding:5px 8px;font-size:12px;white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;border-right:2px solid var(--cv-grey-200)}
 .gkop{position:sticky;top:0;z-index:3;background:var(--cv-blue);color:var(--cv-white);text-align:center;
   padding:5px 0 4px;font-weight:600;font-size:11px;border-right:1px solid rgba(255,255,255,.15)}
@@ -296,6 +300,51 @@ tr:hover .verwijder,tr:hover .verplaats{opacity:1}
 .legende i{width:16px;height:12px;border-radius:2px;display:inline-block}
 
 
+/* ---------- meegroeien met de schermbreedte ---------- */
+.tabelwrap{overflow-x:auto}
+table{min-width:880px}
+th.k-taak{min-width:200px}
+th.k-wie{min-width:110px}
+th.k-opm{min-width:130px}
+th.k-acties{text-align:center}
+th.k-id,th.k-duur,th.k-vg{white-space:nowrap}
+
+@media (max-width:1550px){
+  body{font-size:14px}
+  th{padding:8px 7px;font-size:10px;letter-spacing:.02em}
+  td{padding:4px 6px}
+  table{font-size:12.5px}
+  td input,td select{font-size:12.5px;padding:4px 5px}
+  td input[type=date]{min-width:106px}
+  .paneel{padding:12px 14px 28px}
+  #werkbalk{padding:8px 14px}
+  .cv-topbar{padding:0 14px}
+  .lotkop{padding:8px 10px}
+  #kpistrook{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .cv-kaart{padding:11px 12px;gap:9px}
+  .cv-kaart .waarde{font-size:20px}
+  th.k-taak{min-width:180px}
+}
+@media (max-width:1300px){
+  th.k-duur,td:nth-child(7),th.k-prio,td:nth-child(10){display:none}   /* Duur en Prioriteit weglaten */
+  table{min-width:760px}
+  .cv-topbar-nav .tab{padding:18px 10px;font-size:11px}
+}
+@media (max-width:1050px){
+  th.k-wie,td:nth-child(4),th.k-opm,td:nth-child(11){display:none}     /* Wie en Opmerking weglaten */
+  table{min-width:620px}
+  #kpistrook{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+}
+@media (max-width:760px){
+  th.k-fase,td:nth-child(2),th.k-vg,td:nth-child(9){display:none}
+  .cv-topbar{min-height:auto;padding:8px 12px}
+  .cv-topbar-scheiding{display:none}
+  #werkbalk{padding:8px 12px}
+  #synctekst{margin-left:0;width:100%}
+  .paneel{padding:10px 10px 24px}
+  table{min-width:520px}
+}
+
 @media print{#werkbalk,.cv-topbar-nav,.legende,#lijstacties{display:none}}
 </style>
 </head>
@@ -310,7 +359,7 @@ tr:hover .verwijder,tr:hover .verplaats{opacity:1}
       </svg></span>
     <span class="cv-woordmerk">
       <span class="naam">project<em>planning</em></span>
-      <span class="door">by CvoorU <span class="versie">v2.4</span></span>
+      <span class="door">by CvoorU <span class="versie">v2.6</span></span>
     </span>
   </div>
   <span class="cv-topbar-scheiding"></span>
@@ -332,14 +381,20 @@ tr:hover .verwijder,tr:hover .verplaats{opacity:1}
     <div class="menu">
       <button id="knopNieuwProject">+ Nieuw project (leeg)…</button>
       <div class="menuscheiding"></div>
-      <div class="menukopje">Start uit sjabloon</div>
-      <div id="sjabloonlijst"></div>
-      <button id="knopBewaarSjabloon">Bewaar huidig project als sjabloon…</button>
-      <div class="menuscheiding"></div>
       <button id="knopHernoemProject">Hernoem project…</button>
       <button id="knopArchiveerProject">Archiveer project…</button>
       <div class="menuscheiding"></div>
       <button id="knopVerwijderProject" class="gevaarlijk">Verwijder project…</button>
+    </div>
+  </div>
+  <div class="menuwrap">
+    <button class="knop" id="menuknopSjablonen">Sjablonen ▾</button>
+    <div class="menu">
+      <div class="menukopje">Start nieuw project of voeg toe als lot</div>
+      <div id="sjabloonlijst"></div>
+      <div class="menuscheiding"></div>
+      <button id="knopBewaarSjabloon">Bewaar huidig project als sjabloon…</button>
+      <button id="knopBewaarLotSjabloon">Bewaar een lot als sjabloon…</button>
     </div>
   </div>
   <span class="scheiding"></span>
@@ -1046,7 +1101,8 @@ function vulSjabloonlijst(){
     rij.className="sjabloonrij";
     const knop=document.createElement("button");
     const nLoten=new Set(s.taken.map(t=>t.lot)).size;
-    knop.innerHTML=`${s.naam}<small>${nLoten} loten • ${s.taken.length} taken</small>`;
+    knop.innerHTML=`${s.naam}<small>${nLoten===1?"1 lot":nLoten+" loten"} • ${s.taken.length} taken</small>`;
+    knop.title="Nieuw project starten uit dit sjabloon";
     knop.onclick=()=>{
       const naam=prompt(`Naam voor het nieuwe project (sjabloon: ${s.naam}):`,s.naam);
       if(!naam||!naam.trim()) return;
@@ -1054,6 +1110,17 @@ function vulSjabloonlijst(){
       melding(`Project "${naam.trim()}" aangemaakt uit sjabloon "${s.naam}" — planning start volgende maandag.`);
     };
     rij.appendChild(knop);
+    const alsLot=document.createElement("button");
+    alsLot.className="alslot"; alsLot.textContent="+ lot";
+    alsLot.title="Voeg dit sjabloon als lot toe aan het huidige project";
+    alsLot.onclick=e=>{
+      e.stopPropagation();
+      const p=app.project();
+      if(!p){ melding("Geen actief project."); return; }
+      wijzig(()=>sjabloonAlsLot(p,s));
+      melding(`Sjabloon "${s.naam}" toegevoegd als lot aan "${p.naam}" — start volgende maandag.`);
+    };
+    rij.appendChild(alsLot);
     const weg=document.createElement("button");
     weg.className="weg"; weg.textContent="✕";
     weg.title="Sjabloon verwijderen";
@@ -1080,17 +1147,32 @@ function vulSjabloonlijst(){
 document.getElementById("knopBewaarSjabloon").onclick=()=>{
   const p=app.project();
   if(!p||!p.taken.length){ melding("Dit project bevat geen taken."); return; }
-  let naam=prompt("Naam voor het sjabloon:",p.naam);
+  const naam=prompt("Naam voor het sjabloon:",p.naam);
   if(!naam||!naam.trim()) return;
-  naam=naam.trim();
-  if(naam==="Gebouw 21"||naam==="Project+AR+BA"){ alert("Deze naam is voorbehouden voor een ingebouwd sjabloon."); return; }
-  const bestaand=eigenSjablonen.find(s=>s.naam===naam);
-  if(bestaand&&!confirm(`Er bestaat al een sjabloon "${naam}". Vervangen?`)) return;
-  const inhoud={naam,taken:JSON.parse(app.serialiseer()).projecten.find(x=>x.id===p.id).taken};
-  if(bestaand) Object.assign(bestaand,inhoud); else eigenSjablonen.push(inhoud);
-  bewaarSjablonen(); vulSjabloonlijst();
-  melding(`Project bewaard als sjabloon "${naam}".`);
+  if(sjabloonBewaren(naam,p.taken)) melding(`Project bewaard als sjabloon "${naam.trim()}".`);
 };
+document.getElementById("knopBewaarLotSjabloon").onclick=()=>{
+  const p=app.project();
+  if(!p||!p.taken.length){ melding("Dit project bevat geen taken."); return; }
+  const namen=loten(p);
+  let lot=namen[0];
+  if(namen.length>1){
+    const keuze=prompt("Welk lot bewaren als sjabloon?\n"+namen.map((n,i)=>(i+1)+". "+n).join("\n")+"\n\nTyp het nummer:","1");
+    if(keuze===null) return;
+    const i=parseInt(keuze,10)-1;
+    if(isNaN(i)||i<0||i>=namen.length){ alert("Geen geldig nummer."); return; }
+    lot=namen[i];
+  }
+  bewaarLotAlsSjabloon(p,lot);
+};
+function bewaarLotAlsSjabloon(p,lot){
+  const taken=lotIndices(p,lot).map(i=>p.taken[i]);
+  if(!taken.length){ melding("Dit lot bevat geen taken."); return; }
+  const voorstel=taken[0].lot_omschrijving||lot;
+  const naam=prompt(`Naam voor het sjabloon (lot "${lot}", ${taken.length} taken):`,voorstel);
+  if(!naam||!naam.trim()) return;
+  if(sjabloonBewaren(naam,taken)) melding(`Lot "${lot}" bewaard als sjabloon "${naam.trim()}".`);
+}
 document.getElementById("knopVerwijderProject").onclick=()=>{
   const p=app.project();
   if(confirm(`Project "${p.naam}" met ${p.taken.length} taken volledig verwijderen?`))
@@ -1168,6 +1250,9 @@ function tekenLijst(){
     lotknop("+ Taak toevoegen","Nieuwe taak onderaan dit lot","",()=>{
       wijzig(()=>{ markeerId=taakToevoegen(p,lot,"Nieuwe taak"); focusTaakId=markeerId; });
     });
+    lotknop("☆ Sjabloon","Dit lot bewaren als sjabloon","",()=>{
+      bewaarLotAlsSjabloon(p,lot);
+    });
     lotknop("⧉ Kopieer lot","Dit lot met alle taken kopiëren","",()=>{
       let naam=prompt("Naam voor het gekopieerde lot:",lot+" (kopie)");
       if(!naam||!naam.trim()) return;
@@ -1186,10 +1271,10 @@ function tekenLijst(){
 
     const tabel=document.createElement("table");
     tabel.innerHTML=`<thead><tr>
-      <th>TaakID</th><th>Fase</th><th style="min-width:230px">Taak</th><th style="min-width:120px">Wie</th>
-      <th>StartDatum</th><th>EindDatum</th><th>Duur</th>
-      <th>Status</th><th>Voortgang</th><th>Prioriteit</th>
-      <th style="min-width:150px">Opmerking</th><th style="text-align:center">Acties</th></tr></thead>`;
+      <th class="k-id">TaakID</th><th class="k-fase">Fase</th><th class="k-taak">Taak</th><th class="k-wie">Wie</th>
+      <th class="k-datum">StartDatum</th><th class="k-datum">EindDatum</th><th class="k-duur">Duur</th>
+      <th class="k-status">Status</th><th class="k-vg">Voortgang</th><th class="k-prio">Prioriteit</th>
+      <th class="k-opm">Opmerking</th><th class="k-acties">Acties</th></tr></thead>`;
     const romp=document.createElement("tbody");
 
     for(const i of idx){
@@ -1251,7 +1336,10 @@ function tekenLijst(){
       romp.appendChild(rij);
     }
     tabel.appendChild(romp);
-    blok.appendChild(tabel);
+    const houder=document.createElement("div");
+    houder.className="tabelwrap";
+    houder.appendChild(tabel);
+    blok.appendChild(houder);
     wortel.appendChild(blok);
   }
   if(markeerId){
@@ -1284,13 +1372,17 @@ function keuzeCel(opties,waarde,bijWijziging,klas){
 /* ---------- gantt (gedeelde bouwstenen) ---------- */
 const KLEUR={"Voltooid":"var(--voltooid)","In uitvoering":"var(--uitvoering)",
              "Niet gestart":"var(--gepland)","Geblokkeerd":"var(--geblokkeerd)"};
-let WB=38; const RIJH="30px";
+let WB=38, LB=330; const RIJH="30px";
+function berekenLB(){
+  const b=window.innerWidth||1400;
+  return b<800?170:(b<1100?210:(b<1450?260:330));
+}
 let ganttZoom="week";
 try{ ganttZoom=localStorage.getItem(OPSLAGSLEUTEL+"_zoom")||"week"; }catch(e){}
 function berekenWB(grid,aantalWeken){
   if(ganttZoom==="maand") return 14;
   if(ganttZoom==="alles"){
-    const breed=(grid.parentElement.clientWidth||1100)-340;
+    const breed=(grid.parentElement.clientWidth||1100)-(LB+12);
     return Math.max(5,Math.min(38,breed/Math.max(aantalWeken,1)));
   }
   return 38;
@@ -1378,7 +1470,7 @@ function naarVandaag(gridId,zacht){
     idx=weken.findIndex(w=>w.getTime()>nuMa);
     if(idx<0) idx=weken.length-1;
   }
-  const doel=Math.max(0,330+idx*wb-sc.clientWidth/2);
+  const doel=Math.max(0,LB+idx*wb-sc.clientWidth/2);
   if(zacht&&sc.scrollTo) sc.scrollTo({left:doel,behavior:"smooth"}); else sc.scrollLeft=doel;
   sc.dataset.init="1";
   return true;
@@ -1402,8 +1494,8 @@ function tekenGantt(){
   if(!p||!p.taken.length) return;
   const {w0,weken}=weekbereik(p.taken);
   const nuMa=maandagVan(new Date()).getTime();
-  WB=berekenWB(grid,weken.length);
-  grid.style.gridTemplateColumns=`330px repeat(${weken.length},${WB}px)`;
+  LB=berekenLB(); WB=berekenWB(grid,weken.length);
+  grid.style.gridTemplateColumns=`${LB}px repeat(${weken.length},${WB}px)`;
   kopregel(grid,weken,nuMa,p.naam);
   for(const lot of loten(p)){
     const idx=lotIndices(p,lot);
@@ -1430,8 +1522,8 @@ function tekenTotaal(){
   if(!alle.length) return;
   const {w0,weken}=weekbereik(alle);
   const nuMa=maandagVan(new Date()).getTime();
-  WB=berekenWB(grid,weken.length);
-  grid.style.gridTemplateColumns=`330px repeat(${weken.length},${WB}px)`;
+  LB=berekenLB(); WB=berekenWB(grid,weken.length);
+  grid.style.gridTemplateColumns=`${LB}px repeat(${weken.length},${WB}px)`;
   kopregel(grid,weken,nuMa,"Project / Lot");
   for(const p of zichtbaar){
     bandrij(grid,weken,nuMa,p.naam,"gprojband");
@@ -1911,6 +2003,54 @@ function projectUitSjabloon(sjabloon,projectNaam){
   return p.id;
 }
 
+function vrijeLotnaam(p,gewenst){
+  if(!loten(p).includes(gewenst)) return gewenst;
+  if(/^Lot \d+$/.test(gewenst)){
+    let n=1;
+    while(loten(p).includes("Lot "+n)) n+=1;
+    return "Lot "+n;
+  }
+  let n=2;
+  while(loten(p).includes(gewenst+" ("+n+")")) n+=1;
+  return gewenst+" ("+n+")";
+}
+function sjabloonAlsLot(p,sjabloon){
+  const taken=JSON.parse(JSON.stringify(sjabloon.taken));
+  const vroegste=taken.reduce((a,t)=>t.start<a?t.start:a,taken[0].start);
+  const delta=verschilDagen(volgendeMaandag(),vroegste);
+  // lotnamen uit het sjabloon omzetten naar namen die vrij zijn in dit project
+  const naamMap={};
+  for(const t of taken){
+    if(!(t.lot in naamMap)){
+      naamMap[t.lot]=vrijeLotnaam(p,t.lot);
+      if(naamMap[t.lot]!==t.lot){} // zelfde volgorde, nieuwe naam
+    }
+  }
+  for(const t of taken){
+    t.lot=naamMap[t.lot];
+    t.start=plusDagen(t.start,delta);
+    t.einde=plusDagen(t.einde,delta);
+    t.status="Niet gestart"; t.voortgang=0; t.opmerking="";
+    delete t._duur; delete t._buffer;
+    p.taken.push(t);
+  }
+  hernummerTaken(p);
+  const eersteNieuweLot=Object.values(naamMap)[0];
+  openLoten[p.id+"::"+eersteNieuweLot]=true;
+  return eersteNieuweLot;
+}
+function sjabloonBewaren(naam,taken){
+  naam=naam.trim();
+  if(!naam) return false;
+  if(naam==="Gebouw 21"||naam==="Project+AR+BA"){ alert("Deze naam is voorbehouden voor een ingebouwd sjabloon."); return false; }
+  const bestaand=eigenSjablonen.find(s=>s.naam===naam);
+  if(bestaand&&!confirm(`Er bestaat al een sjabloon "${naam}". Vervangen?`)) return false;
+  const inhoud={naam,taken:JSON.parse(JSON.stringify(taken))};
+  if(bestaand) Object.assign(bestaand,inhoud); else eigenSjablonen.push(inhoud);
+  bewaarSjablonen(); vulSjabloonlijst();
+  return true;
+}
+
 /* ---------- taaksuggesties per fase: eigen paneel + eigen catalogus ---------- */
 const suggestiePaneel=document.createElement("div");
 suggestiePaneel.id="taaksuggesties";
@@ -2007,6 +2147,13 @@ document.querySelectorAll(".menuwrap>.knop").forEach(k=>{
   };
 });
 document.addEventListener("click",()=>document.querySelectorAll(".menuwrap.open").forEach(o=>o.classList.remove("open")));
+
+/* ---------- meegroeien bij het wijzigen van de vensterbreedte ---------- */
+let herteken=null;
+window.addEventListener("resize",()=>{
+  clearTimeout(herteken);
+  herteken=setTimeout(()=>{ tekenGantt(); tekenTotaal(); },250);
+});
 
 /* ---------- start ---------- */
 laad();
