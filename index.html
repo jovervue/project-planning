@@ -309,13 +309,19 @@ th.k-opm{min-width:130px}
 th.k-acties{text-align:center}
 th.k-id,th.k-duur,th.k-vg{white-space:nowrap}
 
+td select{min-width:96px}
+td select.statusselect{min-width:112px}
+td:nth-child(7){white-space:nowrap}          /* Duur nooit afbreken */
+
 @media (max-width:1550px){
   body{font-size:14px}
-  th{padding:8px 7px;font-size:10px;letter-spacing:.02em}
-  td{padding:4px 6px}
+  th{padding:8px 6px;font-size:10px;letter-spacing:.02em}
+  td{padding:4px 5px}
   table{font-size:12.5px}
-  td input,td select{font-size:12.5px;padding:4px 5px}
-  td input[type=date]{min-width:106px}
+  td input,td select{font-size:12.5px;padding:4px 4px}
+  td input[type=date]{min-width:104px}
+  td select{min-width:92px}
+  td select.statusselect{min-width:106px}
   .paneel{padding:12px 14px 28px}
   #werkbalk{padding:8px 14px}
   .cv-topbar{padding:0 14px}
@@ -323,26 +329,28 @@ th.k-id,th.k-duur,th.k-vg{white-space:nowrap}
   #kpistrook{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
   .cv-kaart{padding:11px 12px;gap:9px}
   .cv-kaart .waarde{font-size:20px}
-  th.k-taak{min-width:180px}
+  th.k-taak{min-width:170px}
+  th.k-wie{min-width:90px}
+  th.k-opm{min-width:100px}
 }
 @media (max-width:1300px){
-  th.k-duur,td:nth-child(7),th.k-prio,td:nth-child(10){display:none}   /* Duur en Prioriteit weglaten */
-  table{min-width:760px}
+  th.k-prio,td:nth-child(10),th.k-opm,td:nth-child(11){display:none}   /* Prioriteit en Opmerking weglaten; Duur blijft */
+  table{min-width:820px}
   .cv-topbar-nav .tab{padding:18px 10px;font-size:11px}
 }
 @media (max-width:1050px){
-  th.k-wie,td:nth-child(4),th.k-opm,td:nth-child(11){display:none}     /* Wie en Opmerking weglaten */
-  table{min-width:620px}
+  th.k-wie,td:nth-child(4){display:none}                               /* Wie weglaten */
+  table{min-width:700px}
   #kpistrook{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
 }
 @media (max-width:760px){
-  th.k-fase,td:nth-child(2),th.k-vg,td:nth-child(9){display:none}
+  th.k-fase,td:nth-child(2),th.k-vg,td:nth-child(9){display:none}      /* Duur en Status blijven ook hier */
   .cv-topbar{min-height:auto;padding:8px 12px}
   .cv-topbar-scheiding{display:none}
   #werkbalk{padding:8px 12px}
   #synctekst{margin-left:0;width:100%}
   .paneel{padding:10px 10px 24px}
-  table{min-width:520px}
+  table{min-width:560px}
 }
 
 @media print{#werkbalk,.cv-topbar-nav,.legende,#lijstacties{display:none}}
@@ -359,7 +367,7 @@ th.k-id,th.k-duur,th.k-vg{white-space:nowrap}
       </svg></span>
     <span class="cv-woordmerk">
       <span class="naam">project<em>planning</em></span>
-      <span class="door">by CvoorU <span class="versie">v2.6</span></span>
+      <span class="door">by CvoorU <span class="versie">v2.7</span></span>
     </span>
   </div>
   <span class="cv-topbar-scheiding"></span>
@@ -1306,7 +1314,7 @@ function tekenLijst(){
       rij.appendChild(invoerCel("date",t.start,w=>{ if(w) zetStart(p,t.id,w); }));
       rij.appendChild(invoerCel("date",t.einde,w=>{ if(w) zetEinde(p,t.id,w); }));
       rij.appendChild(cel(duurTxt,"duur"));
-      rij.appendChild(keuzeCel(STATUSSEN,t.status,w=>{ t.status=w; },"st-"+t.status.replace(/ /g,"")));
+      rij.appendChild(keuzeCel(STATUSSEN,t.status,w=>{ t.status=w; },"statusselect st-"+t.status.replace(/ /g,"")));
       rij.appendChild(invoerCel("number",t.voortgang,w=>{ t.voortgang=Math.max(0,Math.min(100,parseInt(w||"0",10))); },"width:64px"));
       rij.appendChild(keuzeCel(PRIORITEITEN,t.prioriteit,w=>{ t.prioriteit=w; }));
       rij.appendChild(invoerCel("text",t.opmerking,w=>{ t.opmerking=w.trim(); }));
